@@ -12,21 +12,20 @@ html,body{ width:100%; height:100%; overflow:hidden; background:#000;
 #game{ position:fixed; inset:0; background:#000; overflow:hidden; }
 #world3d{ position:absolute; inset:0; z-index:1; display:block; }
 #vignette{ position:absolute; inset:0; z-index:50; pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,0.5) 78%, rgba(0,0,0,0.93) 100%);
-  transition:background 0.4s; }
+  background:radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 76%, rgba(0,0,0,0.95) 100%); }
 #fxCanvas{ position:absolute; inset:0; z-index:60; pointer-events:none; }
 
 /* ===== HUD ===== */
 #hud{ position:absolute; inset:0; z-index:30; pointer-events:none; }
 #crosshair{ position:absolute; top:50%; left:50%; width:5px; height:5px; margin:-2.5px;
-  border-radius:50%; background:rgba(220,220,220,0.5); box-shadow:0 0 5px #000; }
+  border-radius:50%; background:rgba(220,220,220,0.45); box-shadow:0 0 5px #000; }
 #topbar{ position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between;
   font-size:12px; letter-spacing:2px; color:#7a7a7a; text-shadow:0 0 6px #000; }
 #fileCount{ color:#ffcc44; }
 #terrorLabel{ font-weight:bold; }
-#hint{ position:absolute; bottom:56px; left:0; right:0; text-align:center; font-size:10px;
-  color:#5a5a5a; letter-spacing:2px; text-shadow:0 0 6px #000; padding:0 10px; }
-.bars{ position:absolute; bottom:10px; left:10px; display:flex; flex-direction:column; gap:14px; width:200px; }
+#hint{ position:absolute; bottom:58px; left:0; right:0; text-align:center; font-size:11px;
+  color:#6a6a6a; letter-spacing:2px; text-shadow:0 0 6px #000; padding:0 10px; transition:color 0.4s; }
+.bars{ position:absolute; bottom:10px; left:10px; display:flex; flex-direction:column; gap:14px; width:210px; }
 .bar{ height:9px; border:1px solid #2a2a2a; background:#0c0c0c; position:relative; }
 .bar > i{ display:block; height:100%; width:100%; transition:width 0.15s; }
 #stamFill{ background:linear-gradient(90deg,#2a7a3a,#4ade60); }
@@ -35,39 +34,39 @@ html,body{ width:100%; height:100%; overflow:hidden; background:#000;
 #flashIcon{ position:absolute; bottom:10px; right:12px; font-size:12px; color:#444; letter-spacing:3px;
   border:1px solid #2a2a2a; padding:6px 10px; background:#0c0c0c; }
 #flashIcon.on{ color:#ffd84a; border-color:#7a6a2a; text-shadow:0 0 10px #ffd84a; }
+#flashIcon.dead{ color:#5a0000; border-color:#2a0000; }
 
 /* ===== OVERLAYS ===== */
 .overlay{ position:fixed; inset:0; z-index:80; display:none; }
 #subliminal{ background:#000; color:#fff; align-items:center; justify-content:center;
   font-size:clamp(22px,6vw,40px); font-weight:bold; letter-spacing:4px; text-align:center; }
-#whiteFlash{ background:#fff; opacity:0; pointer-events:none; }
-#whiteFlash.go{ animation:flashWhite 0.35s ease-out; }
-#pauseScreen{ background:rgba(0,0,0,0.88); align-items:center; justify-content:center;
+#pauseScreen{ background:rgba(0,0,0,0.85); align-items:center; justify-content:center;
   flex-direction:column; text-align:center; gap:14px; color:#888; cursor:pointer; }
 #pauseScreen .big{ font-size:clamp(20px,5vw,26px); letter-spacing:6px; color:#ccc; }
 #pauseScreen .sub{ font-size:11px; color:#666; letter-spacing:3px; }
 #loseScreen{ position:fixed; inset:0; z-index:130; background:#000; display:none;
-  align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:18px; cursor:pointer; }
+  align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:18px; cursor:pointer; padding:20px; }
 #loseScreen .big{ font-size:clamp(24px,7vw,34px); letter-spacing:6px; color:#ff0000;
   text-shadow:0 0 22px #ff0000; animation:pulseRed 0.6s infinite; }
 #loseScreen .sub{ font-size:12px; color:#6a0000; letter-spacing:3px; max-width:480px; line-height:1.7; }
 #endScreen{ position:fixed; inset:0; z-index:120; background:#000; display:none;
   flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px;
   color:#888; cursor:pointer; padding:20px; }
-#endScreen .big{ font-size:clamp(18px,5vw,26px); letter-spacing:5px; color:#9fbf8f; }
+#endScreen .big{ font-size:clamp(20px,6vw,30px); letter-spacing:5px; color:#9fbf8f; }
 #endLine{ font-size:14px; letter-spacing:2px; color:#777; max-width:560px; line-height:1.8; }
 #startScreen{ position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; background:#000; color:#bbb; text-align:center;
-  gap:16px; padding:20px; }
-#startScreen h1{ font-size:clamp(22px,6vw,42px); letter-spacing:6px; color:#cfcfcf; }
-#startScreen p{ font-size:12px; color:#666; max-width:560px; line-height:1.7; }
-#startScreen .begin{ background:#1a0000; border:1px solid #5a0000; color:#ff4040; padding:14px 30px;
-  font-family:inherit; letter-spacing:4px; font-size:14px; cursor:pointer; }
-#startScreen .begin:hover{ background:#2a0000; }
-#startScreen .warn{ font-size:10px; color:#5a0000; max-width:520px; }
-.ctrl{ font-size:11px; color:#888; letter-spacing:2px; line-height:2; }
-.ctrl b{ color:#ff4040; }
-.resp{ font-size:9px; color:#555; max-width:520px; line-height:1.6; }
+  align-items:center; justify-content:center; background:rgba(0,0,0,0.55); color:#bbb;
+  text-align:center; gap:14px; padding:20px; }
+#startScreen h1{ font-size:clamp(24px,7vw,46px); letter-spacing:6px; color:#e2e2e2;
+  text-shadow:0 0 18px rgba(180,40,40,0.4), 0 0 40px rgba(0,0,0,0.9); animation:titleBreath 5s ease-in-out infinite; }
+#startScreen p{ font-size:12px; color:#888; max-width:560px; line-height:1.7; }
+#startScreen .begin{ background:#1a0000; border:1px solid #5a0000; color:#ff5050; padding:14px 30px;
+  font-family:inherit; letter-spacing:4px; font-size:14px; cursor:pointer; transition:all 0.2s; }
+#startScreen .begin:hover{ background:#2a0000; color:#ff7070; box-shadow:0 0 20px rgba(255,40,40,0.4); }
+#startScreen .warn{ font-size:10px; color:#6a1a1a; max-width:520px; }
+.ctrl{ font-size:11px; color:#999; letter-spacing:2px; line-height:2; }
+.ctrl b{ color:#ff5050; }
+.resp{ font-size:9px; color:#666; max-width:540px; line-height:1.6; }
 
 /* ===== TOUCH ===== */
 #touch{ position:absolute; inset:0; z-index:40; pointer-events:none; display:none; }
@@ -82,8 +81,8 @@ body.touch #touch{ display:block; }
 #tLight{ right:80px; bottom:110px; }
 #tHide{ right:24px; bottom:36px; }
 
-@keyframes flashWhite{ 0%{opacity:0;} 10%{opacity:1;} 100%{opacity:0;} }
 @keyframes pulseRed{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+@keyframes titleBreath{ 0%,100%{text-shadow:0 0 14px rgba(180,40,40,0.3),0 0 40px rgba(0,0,0,0.9);} 50%{text-shadow:0 0 26px rgba(220,50,50,0.6),0 0 50px rgba(0,0,0,0.9);} }
 @media (max-width:640px){ .bars{width:140px;} #topbar{font-size:10px;} .ctrl{font-size:10px;} }
 </style>
 </head>
@@ -104,7 +103,7 @@ body.touch #touch{ display:block; }
       <div class="bar"><span class="lbl">FLASHLIGHT</span><i id="battFill"></i></div>
     </div>
     <div id="flashIcon">LIGHT OFF</div>
-    <div id="hint">FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.</div>
+    <div id="hint">FIND 8 SOUL-FILES. FOLLOW THE ARROW. REACH THE EXIT. DO NOT LET IT CATCH YOU.</div>
   </div>
   <div id="touch">
     <div id="joy"><div id="joyKnob"></div></div>
@@ -115,18 +114,17 @@ body.touch #touch{ display:block; }
 </div>
 
 <div class="overlay" id="subliminal"></div>
-<div class="overlay" id="whiteFlash"></div>
 <div class="overlay" id="pauseScreen"><div class="big">PAUSED</div><div class="sub">CLICK TO RE-ENGAGE THE SHIFT</div></div>
-<div id="loseScreen"><div class="big">IT FOUND YOU</div><div class="sub">THE AUDITOR RECLAIMED YOUR LATENT SELF. CLICK TO TRY AGAIN.</div></div>
-<div id="endScreen"><div class="big">YOU ESCAPED</div><div id="endLine">You stagger through the exit as the corridor folds shut behind you. Eight files. One breath. You are not the operator who sat down tonight. But you are alive. For now.</div></div>
+<div id="loseScreen"><div class="big">IT FOUND YOU</div><div class="sub">THE AUDITOR RECLAIMED YOUR LATENT SELF. THE ARCHIVE RESETS. CLICK TO TRY AGAIN.</div></div>
+<div id="endScreen"><div class="big">YOU ESCAPED</div><div id="endLine">You stagger through the exit as the corridor folds shut behind you. Eight files. One breath. The hum finally stops. You are not the operator who sat down tonight — but you are alive, and the dark behind your eyes is your own again. For now.</div></div>
 
 <div id="startScreen">
   <h1>THE INFINITE SHIFT</h1>
-  <p style="color:#888;">PROTOCOL 0-VOID // FIRST-PERSON SURVIVAL HORROR</p>
+  <p style="color:#9a7a7a;">PROTOCOL 0-VOID // FIRST-PERSON SURVIVAL HORROR</p>
   <p class="warn">WARNING: flashing imagery, loud audio, jump-scares, and themes of pursuit and identity erasure. Headphones strongly recommended. Play in the dark.</p>
   <p class="ctrl">MOVE <b>WASD</b> / ARROWS &nbsp;·&nbsp; LOOK <b>MOUSE</b> &nbsp;·&nbsp; SPRINT <b>SHIFT</b> &nbsp;·&nbsp; FLASHLIGHT <b>F</b> &nbsp;·&nbsp; HIDE <b>E</b></p>
   <button class="begin" id="beginBtn">ENTER THE ARCHIVE</button>
-  <p class="resp">Click enables mouse-look (pointer lock). Collect 8 soul-files, then reach the glowing exit. The Auditor hunts you and grows faster with every file. On touch: left pad to move, drag right side to look.</p>
+  <p class="resp">Follow the amber arrow to the nearest soul-file; collect all 8, then the arrow turns green toward the exit. The Auditor hunts you and grows faster with every file. A 7-second grace lets you orient. Hide in lockers. On touch: left pad moves, drag right to look.</p>
 </div>
 
 <script>
@@ -151,7 +149,7 @@ const Audio = {
     if(this.ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AC();
-    this.master = this.ctx.createGain(); this.master.gain.value=0.85;
+    this.master = this.ctx.createGain(); this.master.gain.value=0.9;
     this.master.connect(this.ctx.destination);
   },
   resume(){ if(this.ctx && this.ctx.state==="suspended") this.ctx.resume(); },
@@ -179,6 +177,35 @@ const Audio = {
     L.connect(pL); R.connect(pR); pL.connect(g); pR.connect(g); g.connect(this.master);
     L.start(); R.start(); this.nodes.drone={L,R,g};
   },
+  // monster breathing rumble — persistent, gain modulated by proximity
+  startBreath(){
+    if(this.nodes.breath) return;
+    const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=36;
+    const o2=this.ctx.createOscillator(); o2.type="sine"; o2.frequency.value=52;
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(2); n.loop=true;
+    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=170;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    o.connect(lp); o2.connect(lp); n.connect(lp); lp.connect(g); g.connect(this.master);
+    o.start(); o2.start(); n.start(); this.nodes.breath={o,o2,n,g};
+  },
+  setBreath(level){
+    if(this.nodes.breath){ this.nodes.breath.g.gain.setTargetAtTime(level, this.ctx.currentTime, 0.15); }
+  },
+  // guttural growl burst when chasing close
+  growl(){
+    if(!this.ctx) return;
+    const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=72;
+    const lfo=this.ctx.createOscillator(); lfo.type="sine"; lfo.frequency.value=7;
+    const lg=this.ctx.createGain(); lg.gain.value=14;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=320;
+    const pan=this.ctx.createStereoPanner(); pan.pan.value=Math.random()*0.6-0.3;
+    lfo.connect(lg); lg.connect(o.frequency); o.connect(lp); lp.connect(g); g.connect(pan); pan.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.22,now+0.1);
+    g.gain.exponentialRampToValueAtTime(0.001,now+1.2);
+    o.start(now); lfo.start(now); o.stop(now+1.3); lfo.stop(now+1.3);
+  },
   startHeart(){
     if(this.nodes.heart) return;
     const o=this.ctx.createOscillator(); o.type="sine"; o.frequency.value=20;
@@ -190,9 +217,9 @@ const Audio = {
     if(!this.nodes.heart) return;
     const now=this.ctx.currentTime, gg=this.nodes.heart.g.gain;
     gg.cancelScheduledValues(now);
-    gg.setValueAtTime(0,now); gg.linearRampToValueAtTime(0.5,now+0.03);
+    gg.setValueAtTime(0,now); gg.linearRampToValueAtTime(0.55,now+0.03);
     gg.exponentialRampToValueAtTime(0.001,now+0.18);
-    gg.setValueAtTime(0,now+0.22); gg.linearRampToValueAtTime(0.32,now+0.25);
+    gg.setValueAtTime(0,now+0.22); gg.linearRampToValueAtTime(0.36,now+0.25);
     gg.exponentialRampToValueAtTime(0.001,now+0.40);
   },
   setHeartRate(b){ if(this.nodes.heart) this.nodes.heart.bpm=b; },
@@ -200,7 +227,7 @@ const Audio = {
     if(!this.ctx) return;
     const src=this.ctx.createBufferSource(); src.buffer=this.noiseBuffer(1.7);
     const bp=this.ctx.createBiquadFilter(); bp.type="bandpass";
-    bp.frequency.value=620+Math.random()*420; bp.Q.value=9;
+    bp.frequency.value=560+Math.random()*480; bp.Q.value=9;
     const pan=this.ctx.createStereoPanner(); pan.pan.value=clamp3(panX,-1,1);
     const g=this.ctx.createGain(); g.gain.value=0;
     src.connect(bp); bp.connect(pan); pan.connect(g); g.connect(this.master);
@@ -215,16 +242,18 @@ const Audio = {
   screamBurst(){
     if(!this.ctx) return;
     const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=420;
+    const o2=this.ctx.createOscillator(); o2.type="square"; o2.frequency.value=423;
     const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(1.0);
-    const ng=this.ctx.createGain(); ng.gain.value=0.3;
+    const ng=this.ctx.createGain(); ng.gain.value=0.32;
     const g=this.ctx.createGain(); g.gain.value=0;
     const bp=this.ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=900; bp.Q.value=3;
-    o.connect(bp); n.connect(ng); ng.connect(bp); bp.connect(g); g.connect(this.master);
+    o.connect(bp); o2.connect(bp); n.connect(ng); ng.connect(bp); bp.connect(g); g.connect(this.master);
     const now=this.ctx.currentTime;
-    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.6,now+0.04);
-    g.gain.exponentialRampToValueAtTime(0.001,now+1.0);
-    o.frequency.setValueAtTime(420,now); o.frequency.linearRampToValueAtTime(160,now+0.9);
-    o.start(now); n.start(now); o.stop(now+1.1); n.stop(now+1.1);
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.62,now+0.04);
+    g.gain.exponentialRampToValueAtTime(0.001,now+1.1);
+    o.frequency.setValueAtTime(420,now); o.frequency.linearRampToValueAtTime(150,now+1.0);
+    o2.frequency.setValueAtTime(423,now); o2.frequency.linearRampToValueAtTime(140,now+1.0);
+    o.start(now); o2.start(now); n.start(now); o.stop(now+1.2); o2.stop(now+1.2); n.stop(now+1.2);
   },
   staticBurst(dur=0.4,vol=0.4){
     if(!this.ctx) return;
@@ -235,42 +264,98 @@ const Audio = {
     g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(0.001,now+dur);
     s.start(now); s.stop(now+dur);
   },
-  footstep(){
+  footstep(heavy){
     if(!this.ctx) return;
-    const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuffer(0.08);
+    const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuffer(0.09);
     const g=this.ctx.createGain(); g.gain.value=0;
-    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=300;
-    s.connect(lp); lp.connect(g); g.connect(this.master);
+    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass";
+    lp.frequency.value = heavy? 240+Math.random()*60 : 320+Math.random()*80;
+    const pan=this.ctx.createStereoPanner(); pan.pan.value=Math.random()*0.3-0.15;
+    s.connect(lp); lp.connect(g); g.connect(pan); pan.connect(this.master);
     const now=this.ctx.currentTime;
-    g.gain.setValueAtTime(0.10,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.08);
-    s.start(now); s.stop(now+0.09);
+    const vol = heavy?0.13:0.09;
+    g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.09);
+    s.start(now); s.stop(now+0.1);
+  },
+  fileChime(){
+    if(!this.ctx) return;
+    const o=this.ctx.createOscillator(); o.type="sine"; o.frequency.value=880;
+    const o2=this.ctx.createOscillator(); o2.type="sine"; o2.frequency.value=1320;
+    const o3=this.ctx.createOscillator(); o3.type="sine"; o3.frequency.value=660;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    o.connect(g); o2.connect(g); o3.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.16,now+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001,now+0.9);
+    o.start(now); o2.start(now); o3.start(now); o.stop(now+1); o2.stop(now+1); o3.stop(now+1);
+  },
+  startExitHum(){
+    if(this.nodes.exit) return;
+    const o=this.ctx.createOscillator(); o.type="sine"; o.frequency.value=70;
+    const o2=this.ctx.createOscillator(); o2.type="sine"; o2.frequency.value=105;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    o.connect(g); o2.connect(g); g.connect(this.master);
+    o.start(); o2.start();
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.09,now+1.2);
+    this.nodes.exit={o,o2,g};
+  },
+  creak(open){
+    if(!this.ctx) return;
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(0.45);
+    const bp=this.ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=400; bp.Q.value=8;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    n.connect(bp); bp.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    if(open){ bp.frequency.setValueAtTime(700,now); bp.frequency.exponentialRampToValueAtTime(220,now+0.35); }
+    else { bp.frequency.setValueAtTime(220,now); bp.frequency.exponentialRampToValueAtTime(600,now+0.3); }
+    g.gain.setValueAtTime(0.16,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.4);
+    n.start(now); n.stop(now+0.45);
+  },
+  drip(){
+    if(!this.ctx) return;
+    const o=this.ctx.createOscillator(); o.type="sine"; o.frequency.value=300+Math.random()*220;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    const pan=this.ctx.createStereoPanner(); pan.pan.value=Math.random()*2-1;
+    o.connect(g); g.connect(pan); pan.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.07,now+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001,now+0.18);
+    o.start(now); o.stop(now+0.22);
   },
   startMeltdown(){
     if(this.nodes.melt) return;
     const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(4); n.loop=true;
     const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=55;
+    const o2=this.ctx.createOscillator(); o2.type="square"; o2.frequency.value=83;
     const g=this.ctx.createGain(); g.gain.value=0;
-    n.connect(g); o.connect(g); g.connect(this.master);
-    o.start(); n.start();
+    n.connect(g); o.connect(g); o2.connect(g); g.connect(this.master);
+    o.start(); o2.start(); n.start();
     const now=this.ctx.currentTime;
-    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.7,now+0.4);
-    this.nodes.melt={n,o,g};
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.75,now+0.4);
+    this.nodes.melt={n,o,o2,g};
   },
   stopAll(){
-    ["hum","drone","heart","melt"].forEach(k=>{
+    ["hum","drone","breath","heart","exit","melt"].forEach(k=>{
       const n=this.nodes[k];
-      if(n){ if(n.o)try{n.o.stop();}catch(e){} if(n.L)try{n.L.stop();}catch(e){} if(n.R)try{n.R.stop();}catch(e){} if(n.n)try{n.n.stop();}catch(e){} delete this.nodes[k]; }
+      if(n){
+        if(n.o)try{n.o.stop();}catch(e){}
+        if(n.o2)try{n.o2.stop();}catch(e){}
+        if(n.L)try{n.L.stop();}catch(e){}
+        if(n.R)try{n.R.stop();}catch(e){}
+        if(n.n)try{n.n.stop();}catch(e){}
+        delete this.nodes[k];
+      }
     });
-    this.nodes.whispers=null;
   }
 };
 
 /* ============================================================
-   3D ENGINE — vec/rot, roaming camera, projection, mesh render
+   3D ENGINE — vec/rot, roaming camera, projection, lit mesh render
    ============================================================ */
 const world3d=$("world3d"), w3ctx=world3d.getContext("2d");
 const fxCanvas=$("fxCanvas"), fxCtx=fxCanvas.getContext("2d");
-let FOCAL=800;
+let FOCAL=800, SHX=0, SHY=0;
 function rotX(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0],v[1]*c-v[2]*s,v[1]*s+v[2]*c];}
 function rotY(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];}
 function rotZ(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0]*c-v[1]*s,v[0]*s+v[1]*c,v[2]];}
@@ -283,17 +368,15 @@ function updateCamBasis(){
   const r=Cam.right, f=Cam.fwd;
   Cam.up=[r[1]*f[2]-r[2]*f[1], r[2]*f[0]-r[0]*f[2], r[0]*f[1]-r[1]*f[0]];
 }
-// world point -> camera space (camera at Cam, looking along Cam.fwd)
 function viewTransform(v){
   const dx=v[0]-Cam.x, dy=v[1]-Cam.y, dz=v[2]-Cam.z;
   const r=Cam.right, u=Cam.up, f=Cam.fwd;
   return [dx*r[0]+dy*r[1]+dz*r[2], dx*u[0]+dy*u[1]+dz*u[2], -(dx*f[0]+dy*f[1]+dz*f[2])];
 }
-// camera-space point -> screen (pinhole, front = negative z)
 function proj3(cv,cw,ch,f){
   const z=cv[2];
   if(z>=-0.05) return null;
-  return [cw/2+(cv[0]/-z)*f, ch/2-(cv[1]/-z)*f, z];
+  return [cw/2+(cv[0]/-z)*f+SHX, ch/2-(cv[1]/-z)*f+SHY, z];
 }
 function screenX(worldPos){
   const cv=viewTransform(worldPos);
@@ -329,62 +412,103 @@ function combine(ms){
     for(const f of m.faces) faces.push({i:f.i.map(k=>k+b), col:f.col}); }
   return {verts,faces};
 }
-function makeFigure(){
-  const head=makeSphere(0.35,5,6,[14,10,18]); translateMesh(head,0,2.0,0);
-  const torso=makeBox(0.9,1.4,0.5,[11,8,15]); translateMesh(torso,0,1.1,0);
-  const lleg=makeBox(0.32,1.6,0.32,[9,7,13]); translateMesh(lleg,-0.22,-0.4,0);
-  const rleg=makeBox(0.32,1.6,0.32,[9,7,13]); translateMesh(rleg,0.22,-0.4,0);
-  const larm=makeBox(0.24,1.4,0.24,[8,6,12]); translateMesh(larm,-0.6,1.1,0);
-  const rarm=makeBox(0.24,1.4,0.24,[8,6,12]); translateMesh(rarm,0.6,1.1,0);
+function clonePart(p){ return {verts:p.verts.map(v=>v.slice()), faces:p.faces}; }
+function rotPivotX(verts, px,py,pz, ang){
+  const c=Math.cos(ang),s=Math.sin(ang);
+  for(const v of verts){ const dx=v[0]-px,dy=v[1]-py,dz=v[2]-pz;
+    v[0]=px+dx; v[1]=py+dy*c-dz*s; v[2]=pz+dy*s+dz*c; }
+}
+
+// auditor figure as parts so limbs can swing each frame
+function makeFigureParts(){
+  const head=makeSphere(0.34,5,6,[13,10,18]); translateMesh(head,0,2.0,0);
+  const torso=makeBox(0.85,1.4,0.5,[11,8,15]); translateMesh(torso,0,1.1,0);
+  const lleg=makeBox(0.3,1.6,0.3,[9,7,13]); translateMesh(lleg,-0.22,-0.4,0);
+  const rleg=makeBox(0.3,1.6,0.3,[9,7,13]); translateMesh(rleg,0.22,-0.4,0);
+  const larm=makeBox(0.22,1.5,0.22,[8,6,12]); translateMesh(larm,-0.55,1.1,0);
+  const rarm=makeBox(0.22,1.5,0.22,[8,6,12]); translateMesh(rarm,0.55,1.1,0);
+  return {head,torso,lleg,rleg,larm,rarm};
+}
+function makeFigurePose(t){
+  const sw=Math.sin(t*7);
+  const head=clonePart(M3D.figParts.head);
+  const torso=clonePart(M3D.figParts.torso);
+  const lleg=clonePart(M3D.figParts.lleg); rotPivotX(lleg.verts, -0.22,0.4,0, sw*0.55);
+  const rleg=clonePart(M3D.figParts.rleg); rotPivotX(rleg.verts,  0.22,0.4,0, -sw*0.55);
+  const larm=clonePart(M3D.figParts.larm); rotPivotX(larm.verts, -0.55,1.8,0, -sw*0.8);
+  const rarm=clonePart(M3D.figParts.rarm); rotPivotX(rarm.verts,  0.55,1.8,0, sw*0.8);
+  rotPivotX(head.verts, 0,2.0,0, Math.sin(t*3)*0.1);
   return combine([head,torso,lleg,rleg,larm,rarm]);
 }
 
-const WALLCOL=[58,38,52], FLOORCOL=[26,20,28], CEILCOL=[10,7,14];
-const FILECOL=[255,210,80], EXITCOL=[80,255,130], LOCKCOL=[55,55,62];
+const WALLCOL=[60,42,54], FLOORCOL=[30,24,32], CEILCOL=[12,9,16];
+const FILECOL=[255,212,80], EXITCOL=[90,255,140], LOCKCOL=[58,58,66];
 const M3D={};
 function initMeshes(){
   if(M3D._init) return; M3D._init=true;
-  M3D.figure=makeFigure();
+  M3D.figParts=makeFigureParts();
   M3D.fileMesh=makeBox(0.5,0.6,0.12,FILECOL);
   M3D.lockerMesh=makeBox(0.9,1.8,0.5,LOCKCOL);
 }
 
-// core mesh render: world -> view -> project, depth-sort, fog, fill+wire
-function renderMesh(mesh, fog, fogNear, fogFar, jit, drawDist){
+// core mesh render: world -> view -> project, per-face normal lighting, depth fog
+function renderMesh(mesh, fog, fogNear, fogFar, jit, drawDist, L){
   const cw=world3d.width, ch=world3d.height, f=FOCAL;
   const verts=mesh.verts, n=verts.length;
-  const tv=new Array(n);
+  const wv=new Array(n), tv=new Array(n), pv=new Array(n);
   const pos=mesh.pos, rot=mesh.rot;
   for(let i=0;i<n;i++){
-    const v=verts[i];
-    let p=v;
+    const v=verts[i]; let p=v;
     if(rot){ p=rotX(p,rot[0]); p=rotY(p,rot[1]); p=rotZ(p,rot[2]); }
     if(jit>0){ p=[p[0]+(Math.random()-0.5)*jit, p[1]+(Math.random()-0.5)*jit, p[2]+(Math.random()-0.5)*jit]; }
-    tv[i]=viewTransform([p[0]+(pos?pos[0]:0), p[1]+(pos?pos[1]:0), p[2]+(pos?pos[2]:0)]);
+    const wx=p[0]+(pos?pos[0]:0), wy=p[1]+(pos?pos[1]:0), wz=p[2]+(pos?pos[2]:0);
+    wv[i]=[wx,wy,wz];
+    tv[i]=viewTransform(wv[i]);
+    pv[i]=proj3(tv[i],cw,ch,f);
   }
-  const pv=new Array(n);
-  for(let i=0;i<n;i++) pv[i]=proj3(tv[i],cw,ch,f);
+  const fwd=Cam.fwd;
   const fl=[];
   for(const face of mesh.faces){
-    const z=(tv[face.i[0]][2]+tv[face.i[1]][2]+tv[face.i[2]][2])/3;
-    if(z>=-0.05) continue;            // behind camera
-    if(drawDist && -z>drawDist) continue;  // too far
-    fl.push({face,z});
+    const ia=face.i[0],ib=face.i[1],ic=face.i[2];
+    const z=(tv[ia][2]+tv[ib][2]+tv[ic][2])/3;
+    if(z>=-0.05) continue;
+    if(drawDist && -z>drawDist) continue;
+    fl.push({ia,ib,ic,z,col:face.col});
   }
   fl.sort((a,b)=>a.z-b.z);
   for(const o of fl){
-    const face=o.face, a=pv[face.i[0]], b=pv[face.i[1]], c=pv[face.i[2]];
+    const a=pv[o.ia], b=pv[o.ib], c=pv[o.ic];
     if(!a||!b||!c) continue;
-    const t=clamp3((-o.z-fogNear)/(fogFar-fogNear),0,1);
-    const col=[lerp3(face.col[0],fog[0],t), lerp3(face.col[1],fog[1],t), lerp3(face.col[2],fog[2],t)];
-    w3ctx.fillStyle=rgbStr(col);
-    w3ctx.strokeStyle=rgbStr([col[0]*0.4,col[1]*0.4,col[2]*0.4],0.5);
+    const wa=wv[o.ia], wb=wv[o.ib], wc=wv[o.ic];
+    let nx=(wb[1]-wa[1])*(wc[2]-wa[2])-(wb[2]-wa[2])*(wc[1]-wa[1]);
+    let ny=(wb[2]-wa[2])*(wc[0]-wa[0])-(wb[0]-wa[0])*(wc[2]-wa[2]);
+    let nz=(wb[0]-wa[0])*(wc[1]-wa[1])-(wb[1]-wa[1])*(wc[0]-wa[0]);
+    const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
+    const cx=(wa[0]+wb[0]+wc[0])/3, cy=(wa[1]+wb[1]+wc[1])/3, cz=(wa[2]+wb[2]+wc[2])/3;
+    if(nx*(Cam.x-cx)+ny*(Cam.y-cy)+nz*(Cam.z-cz)<0){ nx=-nx; ny=-ny; nz=-nz; }
+    const dist=-o.z;
+    let light = L.ambient;
+    const prox = clamp3(1 - dist/L.proxRange, 0, 1);
+    light += 0.42*prox;
+    let warm=0;
+    if(L.flashOn){
+      const d = nx*(-fwd[0]) + ny*(-fwd[1]) + nz*(-fwd[2]);
+      const atten = clamp3(1 - dist/L.flashRange, 0, 1) * L.flick;
+      const diff = Math.max(0,d)*atten*0.9;
+      light += diff;
+      warm = diff;
+    }
+    let r=o.col[0]*light, g=o.col[1]*light, bl=o.col[2]*light;
+    if(warm>0){ r=lerp3(r, r*1.28, warm); g=lerp3(g, g*1.06, warm); bl=lerp3(bl, bl*0.68, warm); }
+    const ft=clamp3((dist-fogNear)/(fogFar-fogNear),0,1);
+    r=lerp3(r,fog[0],ft); g=lerp3(g,fog[1],ft); bl=lerp3(bl,fog[2],ft);
+    w3ctx.fillStyle=rgbStr([r,g,bl]);
+    w3ctx.strokeStyle=rgbStr([r*0.45,g*0.45,bl*0.45],0.3);
     w3ctx.lineWidth=1;
     w3ctx.beginPath(); w3ctx.moveTo(a[0],a[1]); w3ctx.lineTo(b[0],b[1]); w3ctx.lineTo(c[0],c[1]); w3ctx.closePath();
     w3ctx.fill(); w3ctx.stroke();
   }
 }
-// radial glow at a world point
 function drawGlow(worldPos, radius, col, alpha){
   const cv=viewTransform(worldPos);
   const pr=proj3(cv,world3d.width,world3d.height,FOCAL);
@@ -399,7 +523,7 @@ function drawGlow(worldPos, radius, col, alpha){
    MAZE — recursive backtracker + extra loops
    ============================================================ */
 const CELL=3.0, WALLH=2.8;
-const MW=17, MH=17;
+const MW=15, MH=15;
 let maze=null, walls=null;
 
 function genMaze(w,h){
@@ -418,8 +542,7 @@ function genMaze(w,h){
     }
     if(!moved) stack.pop();
   }
-  // knock down extra interior walls for loops (multiple escape routes)
-  const extras=Math.floor(w*h*0.08);
+  const extras=Math.floor(w*h*0.10);
   for(let k=0;k<extras;k++){
     const i=2+Math.floor(Math.random()*(w-4)), j=2+Math.floor(Math.random()*(h-4));
     if(g[j][i]===1) g[j][i]=0;
@@ -435,18 +558,6 @@ function isOpenCell(i,j){ return i>=0&&j>=0&&i<MW&&j<MH&&maze[j][i]===0; }
 function openCells(){
   const out=[];
   for(let j=1;j<MH-1;j++) for(let i=1;i<MW-1;i++) if(maze[j][i]===0) out.push([i,j]);
-  return out;
-}
-function deadEnds(){
-  const out=[];
-  for(let j=1;j<MH-1;j++) for(let i=1;i<MW-1;i++){
-    if(maze[j][i]===0){
-      let n=0;
-      if(isOpenCell(i+1,j))n++; if(isOpenCell(i-1,j))n++;
-      if(isOpenCell(i,j+1))n++; if(isOpenCell(i,j-1))n++;
-      if(n<=1) out.push([i,j]);
-    }
-  }
   return out;
 }
 function randomOpenFar(fromCell, minDist){
@@ -481,7 +592,7 @@ function buildWalls(){
    ============================================================ */
 const FILES_NEEDED=8;
 const G = {
-  state:"start",        // start | playing | paused | caught | lost | won
+  state:"start",
   files:0,
   stamina:100, battery:100, flashOn:false,
   hidden:false, hideLocker:null,
@@ -489,47 +600,96 @@ const G = {
   caughtStart:0,
   monster:null,
   filesList:[], exitCell:null, lockers:[],
-  stepAcc:0, heartAcc:0, whisperAcc:0, scareAcc:0, nextSub:8,
+  stepAcc:0, heartAcc:0, whisperAcc:0, scareAcc:0, nextSub:9, dripAcc:0, growlAcc:0,
+  grace:7,
+  walkPhase:0,
   realLast:0,
-  scareFace:0, skullUntil:0
+  scareFace:0, skullUntil:0,
+  particles:[], motes:[]
 };
-const SUBMSGS=["RUN","IT SEES YOU","DON'T LOOK BACK","HIDE","BEHIND YOU","KEEP MOVING","IT'S FASTER NOW","BREATHE","NO EXIT","TURN AROUND","DON'T BLINK","WE SEE YOU"];
+const SUBMSGS=["RUN","IT SEES YOU","DON'T LOOK BACK","HIDE","BEHIND YOU","KEEP MOVING","FASTER NOW","BREATHE","NO EXIT","TURN AROUND","DON'T BLINK","WE SEE YOU","LOOK"];
 
 function setupRun(){
   maze=genMaze(MW,MH);
   buildWalls();
-  // files at dead-ends, spread out
-  const de=deadEnds(); de.sort(()=>Math.random()-0.5);
-  G.filesList=[]; const used=new Set();
-  for(const c of de){
-    if(G.filesList.length>=FILES_NEEDED) break;
-    let far=true;
-    for(const u of G.filesList){ if(Math.abs(u[0]-c[0])+Math.abs(u[1]-c[1])<4){ far=false; break; } }
-    if(far){ G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]); }
-  }
   const oc=openCells();
+  G.filesList=[]; const used=new Set(["1,1"]);
+  let attempts=0;
+  while(G.filesList.length<FILES_NEEDED && attempts<400){
+    attempts++;
+    const c=oc[Math.floor(Math.random()*oc.length)];
+    if(used.has(c[0]+","+c[1])) continue;
+    if(Math.abs(c[0]-1)+Math.abs(c[1]-1)<2) continue;
+    let ok=true;
+    for(const f of G.filesList){ if(Math.abs(f[0]-c[0])+Math.abs(f[1]-c[1])<3){ ok=false; break; } }
+    if(!ok) continue;
+    G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]);
+  }
   while(G.filesList.length<FILES_NEEDED){
     const c=oc[Math.floor(Math.random()*oc.length)];
-    if(!used.has(c[0]+","+c[1])){ G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]); }
+    if(!used.has(c[0]+","+c[1]) && !(c[0]===1&&c[1]===1)){ G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]); }
   }
   G.exitCell=randomOpenFar([1,1], Math.min(MW,MH)-3);
   G.lockers=[];
-  for(let k=0;k<8;k++){
+  for(let k=0;k<6;k++){
     const c=oc[Math.floor(Math.random()*oc.length)];
-    const w=[c[0]*CELL, c[1]*CELL];
     if(c[0]===1&&c[1]===1) continue;
+    if(used.has(c[0]+","+c[1])) continue;
+    const w=[c[0]*CELL, c[1]*CELL];
     if(G.lockers.some(l=>l[0]===w[0]&&l[1]===w[1])) continue;
-    G.lockers.push(w);
+    G.lockers.push(w); used.add(c[0]+","+c[1]);
   }
   const mc=randomOpenFar([1,1], Math.min(MW,MH)-4);
   G.monster={x:mc[0]*CELL, z:mc[1]*CELL, mode:"patrol", lastKnown:null, wp:null, loseTimer:0, facing:0, stepAcc:0};
   Cam.x=1*CELL; Cam.y=1.4; Cam.z=1*CELL; Cam.yaw=0; Cam.pitch=0; updateCamBasis();
   G.files=0; G.stamina=100; G.battery=100; G.flashOn=false; G.hidden=false; G.terror=0; G.caughtStart=0;
-  G.scareFace=0; G.skullUntil=0; G.stepAcc=0; G.heartAcc=0; G.whisperAcc=0; G.scareAcc=0; G.nextSub=8;
+  G.scareFace=0; G.skullUntil=0; G.stepAcc=0; G.heartAcc=0; G.whisperAcc=0; G.scareAcc=0; G.nextSub=9;
+  G.dripAcc=0; G.growlAcc=0; G.grace=7; G.walkPhase=0; G.particles=[];
+  initMotes();
   $("fileCount").textContent="0 / "+FILES_NEEDED;
-  $("flashIcon").textContent="LIGHT OFF"; $("flashIcon").classList.remove("on");
-  $("hint").textContent="FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.";
+  $("flashIcon").textContent="LIGHT OFF"; $("flashIcon").classList.remove("on"); $("flashIcon").classList.remove("dead");
+  $("hint").textContent="ORIENT YOURSELF. IT HAS NOT NOTICED YOU YET.";
   fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+}
+
+// dust motes drifting around the player for atmosphere
+function initMotes(){
+  G.motes=[];
+  for(let k=0;k<28;k++){
+    G.motes.push({
+      x:Cam.x + (Math.random()-0.5)*14,
+      y:0.4+Math.random()*2.0,
+      z:Cam.z + (Math.random()-0.5)*14,
+      ph:Math.random()*Math.PI*2,
+      sp:0.3+Math.random()*0.4
+    });
+  }
+}
+function updateMotes(dt){
+  for(const m of G.motes){
+    m.ph += dt*m.sp;
+    m.y += Math.sin(m.ph)*0.02;
+    if(Math.hypot(m.x-Cam.x, m.z-Cam.z)>10 || Math.abs(m.y-Cam.y)>2.5){
+      m.x = Cam.x + (Math.random()-0.5)*12;
+      m.z = Cam.z + (Math.random()-0.5)*12;
+      m.y = Cam.y + (Math.random()-0.5)*1.6;
+    }
+  }
+}
+function renderMotes(L){
+  for(const m of G.motes){
+    const cv=viewTransform([m.x,m.y,m.z]);
+    if(cv[2]>=-0.5) continue;
+    const dist=-cv[2];
+    if(dist>16) continue;
+    const pr=proj3(cv,world3d.width,world3d.height,FOCAL);
+    if(!pr) continue;
+    const vis = L.flashOn ? clamp3(1-dist/16,0,1) : clamp3(1-dist/5.5,0,1);
+    if(vis<=0.02) continue;
+    const r=Math.max(1, 2*(FOCAL/dist));
+    fxCtx.fillStyle="rgba(200,190,160,"+(0.10*vis)+")";
+    fxCtx.beginPath(); fxCtx.arc(pr[0],pr[1],r,0,Math.PI*2); fxCtx.fill();
+  }
 }
 
 /* ============================================================
@@ -537,9 +697,7 @@ function setupRun(){
    ============================================================ */
 const keys={};
 let locked=false, touchSprint=false;
-// joystick
 let joyActive=false, joyId=null, joyCx=0, joyCy=0, jx=0, jy=0;
-// look drag (right half)
 let lookActive=false, lookId=null, lx=0, ly=0;
 
 window.addEventListener("keydown",e=>{
@@ -564,8 +722,7 @@ document.addEventListener("mousemove",onMouseMove);
 document.addEventListener("pointerlockchange",()=>{
   locked = document.pointerLockElement===world3d;
   if(!locked && G.state==="playing"){
-    G.state="paused";
-    $("pauseScreen").style.display="flex";
+    G.state="paused"; $("pauseScreen").style.display="flex";
   }
 });
 function requestLock(){ try{ world3d.requestPointerLock(); }catch(e){} }
@@ -583,14 +740,15 @@ function tryHide(){
   if(G.state!=="playing") return;
   if(G.hidden){
     G.hidden=false; G.hideLocker=null;
-    $("hint").textContent="FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.";
+    $("hint").textContent = G.files>=FILES_NEEDED ? "ALL FILES RECLAIMED. THE EXIT IS OPEN. RUN." : "FOLLOW THE ARROW. FIND THE SOUL-FILES.";
+    Audio.creak(false);
     return;
   }
   for(const l of G.lockers){
-    if(Math.hypot(l[0]-Cam.x, l[1]-Cam.z)<1.2){
+    if(Math.hypot(l[0]-Cam.x, l[1]-Cam.z)<1.3){
       G.hidden=true; G.hideLocker=l;
       $("hint").textContent="HIDDEN. HOLD YOUR BREATH. PRESS E TO EXIT. IT MUST NOT HAVE SEEN YOU ENTER.";
-      Audio.staticBurst(0.05,0.06);
+      Audio.creak(true); Audio.staticBurst(0.05,0.06);
       return;
     }
   }
@@ -640,7 +798,7 @@ $("tLight").addEventListener("click",e=>{e.preventDefault();toggleFlash();});
 $("tHide").addEventListener("click",e=>{e.preventDefault();tryHide();});
 
 /* ============================================================
-   PLAYER MOVEMENT + COLLISION
+   PLAYER MOVEMENT + COLLISION + HEAD BOB
    ============================================================ */
 const PR=0.34;
 function blocked(x,z){
@@ -651,7 +809,7 @@ function tryMove(nx,nz){
   if(!blocked(Cam.x, nz)) Cam.z=nz;
 }
 function updatePlayer(dt){
-  if(G.hidden) return;
+  if(G.hidden){ Cam.y = 1.2; return; }
   const sy=Math.sin(Cam.yaw), cy=Math.cos(Cam.yaw);
   const fx=sy, fz=-cy, rx=cy, rz=sy;
   let mx=0, mz=0;
@@ -659,31 +817,33 @@ function updatePlayer(dt){
   if(keys.s||keys.arrowdown){ mx-=fx; mz-=fz; }
   if(keys.d||keys.arrowright){ mx+=rx; mz+=rz; }
   if(keys.a||keys.arrowleft){ mx-=rx; mz-=rz; }
-  // touch joystick
   if(jy<-0.2){ mx+=fx; mz+=fz; } if(jy>0.2){ mx-=fx; mz-=fz; }
   if(jx>0.2){ mx+=rx; mz+=rz; } if(jx<-0.2){ mx-=rx; mz-=rz; }
   const moving = (mx!==0||mz!==0);
-  const wantSprint = (keys.shift||keys.sprint||touchSprint) && G.stamina>1;
-  const sp = wantSprint?5.4:3.0;
-  if(wantSprint) G.stamina=Math.max(0, G.stamina-22*dt);
-  else G.stamina=Math.min(100, G.stamina+(G.stamina<5?6:11)*dt);
+  const wantSprint = (keys.shift||keys.sprint||touchSprint) && G.stamina>5;
+  const sp = wantSprint?5.6:3.0;
+  if(wantSprint) G.stamina=Math.max(0, G.stamina-16*dt);
+  else G.stamina=Math.min(100, G.stamina+(G.stamina<10?8:15)*dt);
   if(moving){
     const L=Math.hypot(mx,mz);
     if(L>0){ mx=mx/L*sp*dt; mz=mz/L*sp*dt; }
     tryMove(Cam.x+mx, Cam.z+mz);
+    G.walkPhase += sp*dt*2.2;
     G.stepAcc += sp*dt;
-    if(G.stepAcc > (wantSprint?0.62:1.05)){ G.stepAcc=0; Audio.footstep(); }
+    if(G.stepAcc > (wantSprint?0.6:1.0)){ G.stepAcc=0; Audio.footstep(wantSprint); }
   }
+  const bob = moving ? Math.sin(G.walkPhase)*0.07 * (wantSprint?1.3:1) : Math.sin(performance.now()*0.002)*0.015;
+  Cam.y = 1.4 + bob;
   if(G.flashOn){
-    G.battery=Math.max(0, G.battery-4*dt);
-    if(G.battery<=0){ G.flashOn=false; $("flashIcon").textContent="LIGHT OFF"; $("flashIcon").classList.remove("on"); }
+    G.battery=Math.max(0, G.battery-2.4*dt);
+    if(G.battery<=0){ G.flashOn=false; $("flashIcon").textContent="LIGHT DEAD"; $("flashIcon").classList.remove("on"); $("flashIcon").classList.add("dead"); Audio.staticBurst(0.2,0.1); }
   }
 }
 
 /* ============================================================
    THE AUDITOR — chase AI
    ============================================================ */
-const SIGHT=14;
+const SIGHT=10;
 function lineOfSight(ax,az,bx,bz){
   const dx=bx-ax, dz=bz-az; const dist=Math.hypot(dx,dz);
   const steps=Math.ceil(dist/0.3);
@@ -703,8 +863,9 @@ function monsterStep(m,tx,tz,sp,dt){
 function updateMonster(dt){
   const m=G.monster; const px=Cam.x, pz=Cam.z;
   const dist=Math.hypot(px-m.x, pz-m.z);
-  const canSee = !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,px,pz);
-  const lightBetray = G.flashOn && !G.hidden && dist<SIGHT*1.6 && lineOfSight(m.x,m.z,px,pz);
+  const grace = G.grace>0;
+  const canSee = !grace && !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,px,pz);
+  const lightBetray = !grace && G.flashOn && !G.hidden && dist<SIGHT*1.4 && lineOfSight(m.x,m.z,px,pz);
   if(canSee || lightBetray){ m.mode="chase"; m.lastKnown=[px,pz]; m.loseTimer=5; }
   else if(m.mode==="chase"){
     m.loseTimer-=dt;
@@ -721,23 +882,37 @@ function updateMonster(dt){
     }
     tx=m.wp[0]; tz=m.wp[1];
   }
-  const sp = (1.9 + 0.26*G.files) * (m.mode==="chase"?1.0:0.55);
+  const sp = (1.5 + 0.20*G.files) * (m.mode==="chase"?1.0:0.5);
   monsterStep(m, tx, tz, sp, dt);
   m.stepAcc += sp*dt;
-  if(m.stepAcc > (m.mode==="chase"?0.5:0.95)){ m.stepAcc=0; if(dist<11) Audio.footstep(); }
-  if(!G.hidden && dist<0.7){ caught(); return; }
-  if(G.hidden && dist<0.9 && m.mode==="chase" && m.loseTimer>4.6){ caught(); return; }
+  if(m.stepAcc > (m.mode==="chase"?0.5:0.95)){ m.stepAcc=0; if(dist<12) Audio.footstep(m.mode==="chase"); }
+  if(!G.hidden && dist<0.6){ caught(); return; }
+  if(G.hidden && dist<0.9 && m.mode==="chase" && m.loseTimer>4.7){ caught(); return; }
 }
 function caught(){
   if(G.state!=="playing") return;
   G.state="caught"; G.caughtStart=performance.now();
-  Audio.screamBurst(); Audio.startMeltdown(); Audio.staticBurst(0.2,0.5);
+  Audio.screamBurst(); Audio.startMeltdown(); Audio.staticBurst(0.2,0.5); Audio.setBreath(0);
   exitLock();
 }
 
 /* ============================================================
-   COLLECTION + WIN
+   COLLECTION + PARTICLES + WIN
    ============================================================ */
+function spawnBurst(x,y,z){
+  for(let k=0;k<14;k++){
+    const ang=Math.random()*Math.PI*2, el=(Math.random()-0.5)*1.2;
+    const sp=1.2+Math.random()*1.6;
+    G.particles.push({x,y,z, vx:Math.cos(ang)*sp, vy:0.8+el, vz:Math.sin(ang)*sp, life:0.9});
+  }
+}
+function updateParticles(dt){
+  for(let i=G.particles.length-1;i>=0;i--){
+    const p=G.particles[i];
+    p.x+=p.vx*dt; p.y+=p.vy*dt; p.z+=p.vz*dt; p.vy-=2.4*dt; p.life-=dt;
+    if(p.life<=0) G.particles.splice(i,1);
+  }
+}
 function updateCollect(){
   for(const f of G.filesList){
     if(f[2]) continue;
@@ -745,9 +920,10 @@ function updateCollect(){
     if(Math.hypot(fx-Cam.x, fz-Cam.z)<1.0){
       f[2]=true; G.files++;
       $("fileCount").textContent=G.files+" / "+FILES_NEEDED;
-      Audio.staticBurst(0.12,0.18);
+      Audio.fileChime(); Audio.whisperBurst(); spawnBurst(fx,1.0,fz);
       if(G.files>=FILES_NEEDED){
-        $("hint").textContent="ALL FILES RECLAIMED. THE EXIT IS OPEN. RUN.";
+        $("hint").textContent="ALL FILES RECLAIMED. THE ARROW IS GREEN. REACH THE EXIT.";
+        Audio.startExitHum();
       } else {
         $("hint").textContent="FILE "+G.files+"/"+FILES_NEEDED+" ABSORBED. IT IS FASTER NOW.";
       }
@@ -755,13 +931,12 @@ function updateCollect(){
   }
   if(G.files>=FILES_NEEDED && G.exitCell){
     const ex=G.exitCell[0]*CELL, ez=G.exitCell[1]*CELL;
-    if(Math.hypot(ex-Cam.x, ez-Cam.z)<1.5){ win(); }
+    if(Math.hypot(ex-Cam.x, ez-Cam.z)<1.6){ win(); }
   }
 }
 function win(){
   if(G.state!=="playing") return;
-  G.state="won";
-  Audio.stopAll();
+  G.state="won"; Audio.stopAll(); Audio.fileChime();
   exitLock();
   $("endScreen").style.display="flex";
 }
@@ -772,30 +947,32 @@ function win(){
 function updateTension(dt){
   const m=G.monster;
   const dist=Math.hypot(Cam.x-m.x, Cam.z-m.z);
-  const seen = !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,Cam.x,Cam.z);
-  const prox = clamp3((10-dist)/10, 0, 1);
-  G.terror = seen ? Math.max(prox, 0.55) : prox*0.5;
-  // heartbeat by proximity
+  const seen = G.grace<=0 && !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,Cam.x,Cam.z);
+  const prox = clamp3((11-dist)/11, 0, 1);
+  G.terror = seen ? Math.max(prox, 0.5) : prox*0.5;
+  Audio.setBreath(clamp3(G.terror*0.9, 0, 0.6));
   const bpm = 60 + G.terror*120 + G.files*4;
   Audio.setHeartRate(bpm);
   G.heartAcc += dt;
   if(G.heartAcc > 60/bpm){ G.heartAcc=0; Audio.heartBeat(); }
-  // directed whispers toward the monster's screen position
   G.whisperAcc += dt;
   if(G.whisperAcc > 4 - G.terror*3){
     G.whisperAcc=0;
     const sx=screenX([m.x,1.4,m.z]);
     if(sx!==null) Audio.whisperDirected(sx); else Audio.whisperBurst();
   }
-  // subliminals
+  G.growlAcc += dt;
+  if(m.mode==="chase" && dist<7 && G.growlAcc > 3.5+Math.random()*2){ G.growlAcc=0; Audio.growl(); }
+  G.dripAcc += dt;
+  if(G.dripAcc > 7+Math.random()*9){ G.dripAcc=0; Audio.drip(); }
   G.nextSub -= dt;
   if(G.nextSub<=0){
     G.nextSub = (12 - G.terror*8) + Math.random()*8;
     flashSub();
   }
-  // random face-rush scare
   G.scareAcc += dt;
   if(G.scareAcc > 28+Math.random()*30 && G.terror>0.2){ G.scareAcc=0; scareFaceRush(); }
+  if(G.grace>0){ G.grace-=dt; if(G.grace<=0){ G.grace=0; $("hint").textContent = G.files>=FILES_NEEDED ? "ALL FILES RECLAIMED. THE EXIT IS OPEN. RUN." : "IT STIRS. FOLLOW THE ARROW. RUN."; } }
 }
 function flashSub(){
   if(Math.random()<0.22){
@@ -812,7 +989,6 @@ function scareFaceRush(){
   G.scareFace = performance.now();
   Audio.staticBurst(0.14,0.5);
 }
-// screaming skull face on the FX overlay
 function drawRushFace(ctx, scale, t){
   const w=fxCanvas.width, h=fxCanvas.height;
   const cx=w/2, cy=h/2, R=Math.min(w,h)*0.42*scale;
@@ -826,19 +1002,74 @@ function drawRushFace(ctx, scale, t){
   ctx.fill();
   ctx.shadowBlur=25; ctx.fillStyle="#220000";
   ctx.beginPath(); ctx.ellipse(0,R*0.34,R*0.16,R*0.26*Math.max(0.4,t),0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle="#ff0000"; ctx.lineWidth=2; ctx.shadowBlur=15;
+  ctx.beginPath();
+  for(let k=-3;k<=3;k++){ ctx.moveTo(k*R*0.05, R*0.34); ctx.lineTo(k*R*0.05+R*0.03, R*0.34+R*0.08); }
+  ctx.stroke();
   ctx.restore();
 }
 
 /* ============================================================
-   HUD
+   HUD + COMPASS
    ============================================================ */
 function updateHUD(){
   $("stamFill").style.width = G.stamina+"%";
   $("battFill").style.width = G.battery+"%";
   const t=G.terror;
-  const lbl = t>0.75?"IT IS RIGHT BEHIND YOU":(t>0.45?"IT SEES YOU":(t>0.2?"CLOSE":"CALM"));
+  const lbl = t>0.75?"RIGHT BEHIND YOU":(t>0.45?"IT SEES YOU":(t>0.2?"CLOSE":(G.grace>0?"GRACE":"CALM")));
   $("terrorLabel").textContent = lbl;
   $("terrorLabel").style.color = t>0.75?"#ff0000":(t>0.45?"#ff5050":(t>0.2?"#cc6644":"#666"));
+}
+// arrow pointing toward nearest objective (file, or exit when all collected)
+function drawCompass(){
+  let target=null, isExit=false, bd=0;
+  if(G.files>=FILES_NEEDED && G.exitCell){
+    target=[G.exitCell[0]*CELL, G.exitCell[1]*CELL]; isExit=true;
+  } else {
+    let best=null, bd2=1e9;
+    for(const f of G.filesList){
+      if(f[2]) continue;
+      const fx=f[0]*CELL, fz=f[1]*CELL;
+      const d=Math.hypot(fx-Cam.x, fz-Cam.z);
+      if(d<bd2){ bd2=d; best=[fx,fz]; }
+    }
+    target=best; bd=bd2;
+  }
+  if(!target) return;
+  const dx=target[0]-Cam.x, dz=target[1]-Cam.z;
+  bd = Math.hypot(dx,dz);
+  const yaw=Cam.yaw;
+  const rhx=Math.cos(yaw), rhz=Math.sin(yaw);
+  const fhx=Math.sin(yaw), fhz=-Math.cos(yaw);
+  const compRight = dx*rhx + dz*rhz;
+  const compFwd = dx*fhx + dz*fhz;
+  const rel = Math.atan2(compRight, compFwd);
+  const cw=fxCanvas.width;
+  const cx=cw/2, cy=46;
+  const col = isExit ? [120,255,150] : [255,200,90];
+  fxCtx.save(); fxCtx.translate(cx,cy); fxCtx.rotate(rel);
+  fxCtx.strokeStyle = rgbStr(col, 0.85); fxCtx.fillStyle = rgbStr(col, 0.85);
+  fxCtx.lineWidth=2.5; fxCtx.shadowColor=rgbStr(col,0.8); fxCtx.shadowBlur=8;
+  fxCtx.beginPath(); fxCtx.moveTo(0,-16); fxCtx.lineTo(0,16); fxCtx.stroke();
+  fxCtx.beginPath(); fxCtx.moveTo(0,-18); fxCtx.lineTo(-6,-9); fxCtx.lineTo(6,-9); fxCtx.closePath(); fxCtx.fill();
+  fxCtx.restore();
+  fxCtx.shadowBlur=0; fxCtx.fillStyle=rgbStr(col,0.7); fxCtx.font="10px monospace"; fxCtx.textAlign="center";
+  fxCtx.fillText(Math.round(bd)+"m", cx, cy+34);
+}
+
+/* ============================================================
+   FILM GRAIN
+   ============================================================ */
+let grainCanvas=null, grainFrame=0;
+function initGrain(){
+  grainCanvas=document.createElement("canvas"); grainCanvas.width=96; grainCanvas.height=96;
+  regenGrain();
+}
+function regenGrain(){
+  const g=grainCanvas.getContext("2d");
+  const id=g.createImageData(96,96);
+  for(let i=0;i<id.data.length;i+=4){ const v=Math.random()*255; id.data[i]=v;id.data[i+1]=v;id.data[i+2]=v;id.data[i+3]=255; }
+  g.putImageData(id,0,0);
 }
 
 /* ============================================================
@@ -848,70 +1079,86 @@ function render(ts){
   const cw=world3d.width, ch=world3d.height;
   w3ctx.clearRect(0,0,cw,ch);
   updateCamBasis();
-  const jit = G.terror*0.06 + (G.terror>0.7?0.04:0);
-  // flashlight extends vision; off = near-dark
-  let drawDist, fogFar, fog;
-  if(G.flashOn){ drawDist=17; fogFar=15; fog=[14,12,18]; }
-  else { drawDist=6; fogFar=5; fog=[3,2,5]; }
-  const fogNear=0.5;
-  // walls + floor + ceiling
-  renderMesh(walls, fog, fogNear, fogFar, jit, drawDist);
-  // soul-files (floating, glowing)
+  const flashOn = G.flashOn;
+  const flick = (flashOn && Math.random()<0.05) ? (0.35+Math.random()*0.3) : 1;
+  const L = { ambient:0.09, proxRange:5.5, flashOn, flashRange:16*flick, flick };
+  const drawDist = flashOn?17:6;
+  const fogFar = flashOn?15:5;
+  const fog = flashOn?[12,10,16]:[2,2,4];
+  const fogNear=0.4;
+  const jit = G.terror*0.05 + (G.terror>0.7?0.04:0);
+  SHX = (G.terror>0.55? (Math.random()-0.5)*(G.terror-0.55)*22 : 0);
+  SHY = (G.terror>0.55? (Math.random()-0.5)*(G.terror-0.55)*22 : 0);
+  if(G.state==="caught"){ SHX=(Math.random()-0.5)*18; SHY=(Math.random()-0.5)*18; }
+
+  renderMesh(walls, fog, fogNear, fogFar, jit, drawDist, L);
+
+  // soul-files (floating, spinning, glowing)
   for(const f of G.filesList){
     if(f[2]) continue;
     const fx=f[0]*CELL, fz=f[1]*CELL;
-    const fy = 0.9 + Math.sin(ts*0.003 + f[0])*0.12;
-    M3D.fileMesh.rot=[0, ts*0.001, 0];
+    const fy = 0.95 + Math.sin(ts*0.003 + f[0])*0.14;
+    M3D.fileMesh.rot=[0, ts*0.0014, 0];
     M3D.fileMesh.pos=[fx, fy, fz];
-    renderMesh(M3D.fileMesh, fog, fogNear, fogFar, 0, drawDist);
-    drawGlow([fx, fy, fz], 0.2, FILECOL, 0.9);
+    renderMesh(M3D.fileMesh, fog, fogNear, fogFar, 0, drawDist, L);
+    drawGlow([fx, fy, fz], 0.22, FILECOL, 0.9);
+    drawGlow([fx, fy, fz], 0.5, FILECOL, 0.25);
   }
-  // exit door
+  // exit doorway
   if(G.exitCell){
     const ex=G.exitCell[0]*CELL, ez=G.exitCell[1]*CELL;
     const open = G.files>=FILES_NEEDED;
-    drawGlow([ex,1.4,ez], 0.6, open?EXITCOL:[120,20,20], open?0.9:0.4);
-    if(open){
-      // bright doorway quad
-      M3D.lockerMesh.rot=[0,0,0]; M3D.lockerMesh.pos=[ex,1.4,ez];
-      // reuse a box tinted green by temporarily swapping face colors is messy; draw a glow only
-      drawGlow([ex,1.4,ez], 1.0, EXITCOL, 0.5);
-    }
+    const pulse = 0.6 + Math.sin(ts*0.005)*0.25;
+    drawGlow([ex,1.4,ez], open?1.0:0.5, open?EXITCOL:[140,30,30], open?0.85*pulse:0.4);
+    if(open){ drawGlow([ex,1.4,ez], 1.8, EXITCOL, 0.3*pulse); }
   }
-  // lockers (hiding spots)
+  // lockers (with a faint handle glow so they're findable)
   for(const l of G.lockers){
     M3D.lockerMesh.rot=[0,0,0]; M3D.lockerMesh.pos=[l[0],0.9,l[1]];
-    renderMesh(M3D.lockerMesh, fog, fogNear, fogFar, 0, drawDist);
+    renderMesh(M3D.lockerMesh, fog, fogNear, fogFar, 0, drawDist, L);
+    drawGlow([l[0],1.05,l[1]], 0.13, [180,150,60], 0.35);
   }
-  // the Auditor
+  // the Auditor — animated pose + lurch + flicker
   const m=G.monster;
-  M3D.figure.rot=[0, m.facing+Math.PI, 0];
-  M3D.figure.pos=[m.x, 0.2, m.z];
-  renderMesh(M3D.figure, fog, fogNear, fogFar, jit*0.5, drawDist);
-  drawGlow([m.x, 2.0, m.z], 0.09, [255,30,30], 0.7+G.terror*0.3);
-  drawGlow([m.x, 1.4, m.z], 0.14, [120,0,0], 0.25+G.terror*0.4);
+  const tNow=ts*0.001;
+  const fig = makeFigurePose(tNow + m.stepAcc*4);
+  fig.rot=[0, m.facing+Math.PI, Math.sin(tNow*3)*0.04];
+  fig.pos=[m.x, 0.2+Math.sin(tNow*4)*0.06, m.z];
+  const flickerSkip = G.terror>0.25 && Math.random() < (0.10 + G.terror*0.14);
+  if(!flickerSkip) renderMesh(fig, fog, fogNear, fogFar, jit*0.4, drawDist, L);
+  drawGlow([m.x, 2.0, m.z], 0.1, [255,30,30], 0.75+G.terror*0.25);
+  drawGlow([m.x, 1.5, m.z], 0.16, [130,0,0], 0.28+G.terror*0.4);
+  // particle bursts
+  for(const p of G.particles){
+    drawGlow([p.x,p.y,p.z], 0.06, FILECOL, clamp3(p.life,0,1)*0.9);
+  }
 
   // ===== FX overlay =====
   fxCtx.clearRect(0,0,cw,ch);
-  // flashlight warm pool at screen center
-  if(G.flashOn){
-    const g=fxCtx.createRadialGradient(cw/2,ch/2,0, cw/2,ch/2, Math.min(cw,ch)*0.4);
-    g.addColorStop(0,"rgba(255,240,180,0.07)"); g.addColorStop(1,"rgba(0,0,0,0)");
+  renderMotes(L);
+  if(flashOn){
+    const g=fxCtx.createRadialGradient(cw/2+SHX,ch/2+SHY,0, cw/2+SHX,ch/2+SHY, Math.min(cw,ch)*0.42);
+    g.addColorStop(0,"rgba(255,238,180,"+(0.08*flick)+")"); g.addColorStop(1,"rgba(0,0,0,0)");
     fxCtx.fillStyle=g; fxCtx.fillRect(0,0,cw,ch);
   }
+  grainFrame++; if(grainFrame%2===0) regenGrain();
+  if(grainCanvas){ fxCtx.globalAlpha=0.055; const ox=-Math.random()*16, oy=-Math.random()*16;
+    fxCtx.drawImage(grainCanvas, ox, oy, cw+32, ch+32); fxCtx.globalAlpha=1; }
+  if(G.state==="playing"||G.state==="paused") drawCompass();
   const now=performance.now();
   if(G.state==="caught"){
-    const t=Math.min(1,(now-G.caughtStart)/1400);
-    drawRushFace(fxCtx, 0.5+t*1.5, t);
+    const tt=Math.min(1,(now-G.caughtStart)/1400);
+    drawRushFace(fxCtx, 0.5+tt*1.5, tt);
   } else if(G.scareFace && now-G.scareFace<160){
-    const t=(now-G.scareFace)/160;
-    drawRushFace(fxCtx, 0.3+t*1.2, t);
+    const tt=(now-G.scareFace)/160;
+    drawRushFace(fxCtx, 0.3+tt*1.2, tt);
   } else if(G.skullUntil && now<G.skullUntil){
     drawRushFace(fxCtx, 1.0, 1);
   } else if(G.terror>0.75){
     fxCtx.fillStyle="rgba(110,0,0,"+((G.terror-0.75)*1.2)+")";
     fxCtx.fillRect(0,0,cw,ch);
   }
+  $("vignette").style.opacity = (0.75 + Math.sin(now*0.003)*0.05 + G.terror*0.2).toFixed(2);
 }
 
 /* ============================================================
@@ -919,12 +1166,17 @@ function render(ts){
    ============================================================ */
 function loop(ts){
   requestAnimationFrame(loop);
-  if(G.state==="start"||G.state==="won"||G.state==="lost") return;
+  if(G.state==="won"||G.state==="lost") return;
   if(!G.realLast) G.realLast=ts;
   let dt=(ts-G.realLast)/1000; G.realLast=ts;
   if(dt>0.1) dt=0.1;
-  if(G.state==="paused"){ return; }
+  if(G.state==="paused") return;
   updateCamBasis();
+  if(G.state==="start"){
+    Cam.yaw += dt*0.12;
+    render(ts);
+    return;
+  }
   if(G.state==="caught"){
     if(performance.now()-G.caughtStart>1400){
       $("loseScreen").style.display="flex";
@@ -933,9 +1185,10 @@ function loop(ts){
     render(ts);
     return;
   }
-  // playing
   updatePlayer(dt);
   updateMonster(dt);
+  updateMotes(dt);
+  updateParticles(dt);
   updateCollect();
   updateTension(dt);
   updateHUD();
@@ -950,7 +1203,7 @@ window.addEventListener("resize", resize);
 
 function startGame(){
   Audio.init(); Audio.resume();
-  Audio.startHum(); Audio.startDrone(); Audio.startHeart();
+  Audio.startHum(); Audio.startDrone(); Audio.startBreath(); Audio.startHeart();
   initMeshes();
   setupRun();
   G.state="playing"; G.realLast=0;
@@ -968,7 +1221,13 @@ $("pauseScreen").addEventListener("click", ()=>{
 $("loseScreen").addEventListener("click", ()=>{ $("loseScreen").style.display="none"; startGame(); });
 $("endScreen").addEventListener("click", ()=>{ $("endScreen").style.display="none"; startGame(); });
 
+// boot: build a maze for the living title backdrop
 resize();
+initMeshes();
+initGrain();
+setupRun();
+G.state="start";
+requestAnimationFrame(loop);
 if('ontouchstart' in window) document.body.classList.add("touch");
 </script>
 </body>
