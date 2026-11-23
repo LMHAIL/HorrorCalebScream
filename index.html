@@ -2,1457 +2,974 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Infinite Shift: Protocol 0-Void</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>THE INFINITE SHIFT: RUN</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root{
-  --bg:#eef1f4; --panel:#ffffff; --text:#16181c; --accent:#0a66c2;
-  --muted:#6b7280; --line:#d6dae0; --good:#1a8a3a; --bad:#c21515;
-  --grid-a:#cfd6dd;
-}
-html,body{
-  width:100%; height:100%; overflow:hidden; background:#000;
-  font-family:'Courier New','Consolas',monospace; color:var(--text);
-  user-select:none; -webkit-user-select:none; cursor:default;
-}
-#game{
-  position:fixed; inset:0; background:var(--bg); transition:background 1.2s ease;
-  overflow:hidden;
-}
-/* ===== PHASE TINTS ===== */
-body.phase1 #game{ background:#f6f8fa; }
-body.phase2 #game{
-  background:
-    radial-gradient(circle at 50% 30%, rgba(120,95,20,0.10), transparent 60%),
-    linear-gradient(180deg, #d9cf8e 0%, #b8a45e 100%);
-  filter:saturate(1.15);
-}
-body.phase3 #game{
-  background:radial-gradient(circle at 50% 50%, #3a1414 0%, #120606 80%);
-  color:#ffd9d9;
-}
-body.phase4 #game{
-  background:#000; color:#ff2b2b;
-  filter:invert(0) hue-rotate(0deg);
-}
-body.phase4 #stage{ animation:jitterShake 0.12s infinite steps(2); }
-body.phase5 #game{
-  background:radial-gradient(circle at 50% 60%, #050505 0%, #000 90%);
-  color:#7a1a1a;
-}
-/* ===== STAGE / LAYOUT ===== */
-#stage{ position:absolute; inset:0; padding:10px; display:flex; flex-direction:column; gap:8px; }
-.float-drift{ animation:floatDrift 7s ease-in-out infinite; }
+html,body{ width:100%; height:100%; overflow:hidden; background:#000;
+  font-family:'Courier New','Consolas',monospace; color:#cfcfcf;
+  user-select:none; -webkit-user-select:none; cursor:default; }
+#game{ position:fixed; inset:0; background:#000; overflow:hidden; }
+#world3d{ position:absolute; inset:0; z-index:1; display:block; }
+#vignette{ position:absolute; inset:0; z-index:50; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,0.5) 78%, rgba(0,0,0,0.93) 100%);
+  transition:background 0.4s; }
+#fxCanvas{ position:absolute; inset:0; z-index:60; pointer-events:none; }
 
 /* ===== HUD ===== */
-#hud{
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  background:var(--panel); border:1px solid var(--line); padding:8px 10px;
-  font-size:12px; z-index:20;
-}
-body.phase3 #hud,body.phase4 #hud,body.phase5 #hud{ background:#1a0a0a; border-color:#3a1414; color:#ff9a9a; }
-#hud .cell{ display:flex; flex-direction:column; gap:2px; min-width:90px; }
-#hud .label{ font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-body.phase4 #hud .label{ color:#7a1a1a; }
-#hud .val{ font-size:15px; font-weight:bold; letter-spacing:1px; }
-#clock{ color:var(--accent); font-size:18px; }
-body.phase4 #clock{ color:#ff2b2b; }
-.meter{ height:8px; background:#00000022; border:1px solid var(--line); position:relative; width:120px; }
-body.phase4 .meter{ background:#220000; border-color:#550000; }
-.meter > i{ display:block; height:100%; width:0%; transition:width 0.3s linear, background 0.4s; }
-#stressFill{ background:linear-gradient(90deg,#caa00a,#c21515); }
-#overFill{ background:linear-gradient(90deg,#1a8a8a,#c21515); }
-#blinkFill{ background:linear-gradient(90deg,#4a90ff,#1a8a3a); }
-#corruptFill{ background:linear-gradient(90deg,#551111,#ff0000); }
-
-/* ===== MAIN WORK AREA ===== */
-#main{ flex:1; display:grid; grid-template-columns:1fr 320px; gap:8px; min-height:0; }
-#workPane{
-  background:var(--panel); border:1px solid var(--line); padding:14px;
-  display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden;
-}
-body.phase3 #workPane,body.phase4 #workPane,body.phase5 #workPane{
-  background:#150808; border-color:#3a1414; color:#e9b4b4;
-}
-#sidePane{ display:flex; flex-direction:column; gap:8px; min-height:0; }
-.panel{
-  background:var(--panel); border:1px solid var(--line); padding:10px; font-size:11px;
-}
-body.phase3 .panel,body.phase4 .panel,body.phase5 .panel{ background:#120707; border-color:#3a1414; color:#d98a8a; }
-
-#fileCard{ flex:1; display:flex; flex-direction:column; gap:8px; min-height:0; }
-.fileHead{ display:flex; justify-content:space-between; font-size:10px; color:var(--muted); letter-spacing:1px; }
-.fileBody{ flex:1; display:flex; align-items:center; justify-content:center; padding:8px; border:1px dashed var(--line); min-height:120px; overflow:hidden; }
-body.phase3 .fileBody,body.phase4 .fileBody{ border-color:#3a1414; }
-#fileRefNum{ font-size:22px; letter-spacing:3px; font-weight:bold; word-break:break-all; text-align:center; }
-#anatomyCanvas{ max-width:100%; height:auto; display:none; }
-.fileMeta{ font-size:10px; color:var(--muted); }
-#memoLog{ font-size:10px; color:#444; max-height:60px; overflow:hidden; }
-body.phase3 #memoLog,body.phase4 #memoLog{ color:#8a5a5a; }
-
-.inputRow{ display:flex; gap:6px; }
-#refInput{
-  flex:1; font-family:inherit; font-size:14px; padding:8px; border:1px solid var(--line);
-  background:#fafbff; letter-spacing:2px;
-}
-body.phase4 #refInput{ background:#1a0000; border-color:#550000; color:#ff2b2b; }
-.btn{
-  font-family:inherit; font-size:12px; letter-spacing:2px; padding:8px 14px;
-  border:1px solid var(--accent); background:#0a66c2; color:#fff; cursor:pointer;
-  transition:transform 0.05s, background 0.15s;
-}
-.btn:active{ transform:translateY(1px) scale(0.98); }
-.btn.alt{ background:#333; border-color:#333; }
-.btn.deny{ background:#7a1010; border-color:#7a1010; }
-.btn.accept{ background:#0a66c2; border-color:#0a66c2; }
-body.phase4 .btn{ background:#1a0000; border-color:#ff2b2b; color:#ff2b2b; box-shadow:0 0 8px #ff000066; }
-.btn:disabled{ opacity:0.4; cursor:not-allowed; }
-
-/* ===== COOLING GRID ===== */
-#coolingPanel{ display:none; }
-#coolingGrid{ display:grid; grid-template-columns:repeat(6,1fr); gap:3px; }
-#coolingGrid > div{ aspect-ratio:1; background:var(--grid-a); }
-#coolingGrid > div.hot{ background:#ff6a00; }
-#coolingGrid > div.crit{ background:#ff0000; animation:pulseRed 0.4s infinite; }
-#sirenBar{ height:4px; background:#000; margin-top:6px; }
-#sirenBar.on{ background:#ff0000; animation:pulseRed 0.2s infinite; }
-
-/* ===== TERMINAL ===== */
-#terminal{ display:none; }
-#termLog{ height:90px; overflow:auto; background:#000; color:#0f0; padding:6px; font-size:11px; border:1px solid #333; }
-#termInput{ width:100%; font-family:inherit; background:#000; color:#0f0; border:1px solid #0f0; padding:6px; font-size:12px; margin-top:4px; }
-
-/* ===== AUDITOR ===== */
-#auditor{ display:none; position:absolute; inset:0; z-index:40; background:rgba(0,0,0,0.92); color:#ff2b2b; padding:30px; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
-#auditor .title{ font-size:24px; letter-spacing:6px; margin-bottom:14px; text-shadow:0 0 12px #ff0000; }
-#auditor .mono{ font-size:15px; max-width:680px; line-height:1.7; min-height:120px; }
-#auditorSwapHint{ font-size:10px; color:#7a1a1a; margin-top:10px; }
-
-/* ===== PHASE 5 FILE HIERARCHY ===== */
-#graveyard{ display:none; flex:1; flex-direction:column; gap:4px; overflow:auto; }
-#graveyard .gfile{ display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border:1px solid #3a1414; background:#0a0303; color:#c97070; font-size:11px; }
-#graveyard .gfile button{ background:#220000; border:1px solid #ff000055; color:#ff5050; padding:3px 8px; font-family:inherit; cursor:pointer; font-size:10px; }
-#graveyard .gfile.dead{ opacity:0.25; text-decoration:line-through; }
-
-/* ===== BACKGROUND CANVASES ===== */
-#bgSilhouette{ position:absolute; inset:0; z-index:1; pointer-events:none; }
-#fxCanvas{ position:absolute; inset:0; z-index:60; pointer-events:none; }
+#hud{ position:absolute; inset:0; z-index:30; pointer-events:none; }
+#crosshair{ position:absolute; top:50%; left:50%; width:5px; height:5px; margin:-2.5px;
+  border-radius:50%; background:rgba(220,220,220,0.5); box-shadow:0 0 5px #000; }
+#topbar{ position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between;
+  font-size:12px; letter-spacing:2px; color:#7a7a7a; text-shadow:0 0 6px #000; }
+#fileCount{ color:#ffcc44; }
+#terrorLabel{ font-weight:bold; }
+#hint{ position:absolute; bottom:56px; left:0; right:0; text-align:center; font-size:10px;
+  color:#5a5a5a; letter-spacing:2px; text-shadow:0 0 6px #000; padding:0 10px; }
+.bars{ position:absolute; bottom:10px; left:10px; display:flex; flex-direction:column; gap:14px; width:200px; }
+.bar{ height:9px; border:1px solid #2a2a2a; background:#0c0c0c; position:relative; }
+.bar > i{ display:block; height:100%; width:100%; transition:width 0.15s; }
+#stamFill{ background:linear-gradient(90deg,#2a7a3a,#4ade60); }
+#battFill{ background:linear-gradient(90deg,#7a6a2a,#ffd84a); }
+.bar .lbl{ position:absolute; top:-12px; left:0; font-size:8px; color:#555; letter-spacing:2px; }
+#flashIcon{ position:absolute; bottom:10px; right:12px; font-size:12px; color:#444; letter-spacing:3px;
+  border:1px solid #2a2a2a; padding:6px 10px; background:#0c0c0c; }
+#flashIcon.on{ color:#ffd84a; border-color:#7a6a2a; text-shadow:0 0 10px #ffd84a; }
 
 /* ===== OVERLAYS ===== */
 .overlay{ position:fixed; inset:0; z-index:80; display:none; }
-#subliminal{ background:#000; color:#fff; align-items:center; justify-content:center; font-size:38px; font-weight:bold; letter-spacing:4px; text-align:center; }
+#subliminal{ background:#000; color:#fff; align-items:center; justify-content:center;
+  font-size:clamp(22px,6vw,40px); font-weight:bold; letter-spacing:4px; text-align:center; }
 #whiteFlash{ background:#fff; opacity:0; pointer-events:none; }
 #whiteFlash.go{ animation:flashWhite 0.35s ease-out; }
-#tabLock{ background:#000; color:#ff0000; align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:20px; }
-#tabLock .big{ font-size:30px; letter-spacing:6px; text-shadow:0 0 20px #ff0000; animation:pulseRed 0.5s infinite; }
-#tabLock .sub{ font-size:13px; color:#aa0000; letter-spacing:3px; }
+#pauseScreen{ background:rgba(0,0,0,0.88); align-items:center; justify-content:center;
+  flex-direction:column; text-align:center; gap:14px; color:#888; cursor:pointer; }
+#pauseScreen .big{ font-size:clamp(20px,5vw,26px); letter-spacing:6px; color:#ccc; }
+#pauseScreen .sub{ font-size:11px; color:#666; letter-spacing:3px; }
+#loseScreen{ position:fixed; inset:0; z-index:130; background:#000; display:none;
+  align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:18px; cursor:pointer; }
+#loseScreen .big{ font-size:clamp(24px,7vw,34px); letter-spacing:6px; color:#ff0000;
+  text-shadow:0 0 22px #ff0000; animation:pulseRed 0.6s infinite; }
+#loseScreen .sub{ font-size:12px; color:#6a0000; letter-spacing:3px; max-width:480px; line-height:1.7; }
+#endScreen{ position:fixed; inset:0; z-index:120; background:#000; display:none;
+  flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px;
+  color:#888; cursor:pointer; padding:20px; }
+#endScreen .big{ font-size:clamp(18px,5vw,26px); letter-spacing:5px; color:#9fbf8f; }
+#endLine{ font-size:14px; letter-spacing:2px; color:#777; max-width:560px; line-height:1.8; }
+#startScreen{ position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; background:#000; color:#bbb; text-align:center;
+  gap:16px; padding:20px; }
+#startScreen h1{ font-size:clamp(22px,6vw,42px); letter-spacing:6px; color:#cfcfcf; }
+#startScreen p{ font-size:12px; color:#666; max-width:560px; line-height:1.7; }
+#startScreen .begin{ background:#1a0000; border:1px solid #5a0000; color:#ff4040; padding:14px 30px;
+  font-family:inherit; letter-spacing:4px; font-size:14px; cursor:pointer; }
+#startScreen .begin:hover{ background:#2a0000; }
+#startScreen .warn{ font-size:10px; color:#5a0000; max-width:520px; }
+.ctrl{ font-size:11px; color:#888; letter-spacing:2px; line-height:2; }
+.ctrl b{ color:#ff4040; }
+.resp{ font-size:9px; color:#555; max-width:520px; line-height:1.6; }
 
-/* ===== START / END ===== */
-#startScreen,#endScreen{ position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; color:#bbb; text-align:center; gap:20px; padding:20px; }
-#startScreen h1{ font-size:clamp(20px,5vw,38px); letter-spacing:4px; color:#cfcfcf; }
-#startScreen p{ font-size:12px; color:#666; max-width:520px; line-height:1.6; }
-#startScreen input{ background:#111; border:1px solid #333; color:#ccc; padding:10px; font-family:inherit; font-size:14px; letter-spacing:2px; text-align:center; width:280px; max-width:90vw; }
-#startScreen .begin{ background:#1a0000; border:1px solid #5a0000; color:#ff4040; padding:14px 30px; font-family:inherit; letter-spacing:4px; font-size:14px; cursor:pointer; }
-#startScreen .warn{ font-size:10px; color:#5a0000; max-width:480px; }
-#endScreen{ z-index:120; display:none; }
-#endLine{ color:#555; font-size:18px; letter-spacing:3px; opacity:0; transition:opacity 4s; }
-#endScreen.show #endLine{ opacity:1; }
+/* ===== TOUCH ===== */
+#touch{ position:absolute; inset:0; z-index:40; pointer-events:none; display:none; }
+body.touch #touch{ display:block; }
+#joy{ position:absolute; left:24px; bottom:24px; width:130px; height:130px;
+  border:2px solid #2a2a2a; border-radius:50%; pointer-events:auto; background:rgba(0,0,0,0.3); }
+#joyKnob{ position:absolute; left:45px; top:45px; width:40px; height:40px; border-radius:50%;
+  background:#444; pointer-events:none; }
+.tbtn{ position:absolute; pointer-events:auto; border:1px solid #2a2a2a; background:rgba(12,12,12,0.8);
+  color:#888; font-family:inherit; font-size:12px; letter-spacing:2px; padding:14px 12px; border-radius:6px; }
+#tSprint{ right:150px; bottom:36px; }
+#tLight{ right:80px; bottom:110px; }
+#tHide{ right:24px; bottom:36px; }
 
-/* ===== ANIMATIONS ===== */
-@keyframes jitterShake{
-  0%{ transform:translate(0,0) skewX(0deg); }
-  25%{ transform:translate(-3px,2px) skewX(0.8deg); }
-  50%{ transform:translate(2px,-2px) skewX(-0.6deg); }
-  75%{ transform:translate(-2px,-1px) skewX(0.4deg); }
-  100%{ transform:translate(2px,1px) skewX(-0.5deg); }
-}
-@keyframes floatDrift{
-  0%{ transform:translate(0,0); }
-  33%{ transform:translate(1.5px,-1px); }
-  66%{ transform:translate(-1px,1.5px); }
-  100%{ transform:translate(0,0); }
-}
 @keyframes flashWhite{ 0%{opacity:0;} 10%{opacity:1;} 100%{opacity:0;} }
 @keyframes pulseRed{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-@keyframes heartVibrate{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(0.5px,0.5px);} }
-@keyframes glitchShift{ 0%{clip-path:inset(0 0 0 0);} 20%{clip-path:inset(20% 0 40% 0); transform:translate(-2px);} 40%{clip-path:inset(60% 0 10% 0); transform:translate(2px);} 60%{clip-path:inset(10% 0 70% 0);} 80%{clip-path:inset(40% 0 30% 0); transform:translate(-1px);} 100%{clip-path:inset(0 0 0 0);} }
-body.heartbeat #game{ animation:heartVibrate 1.2s infinite; }
-.blurEyes{ filter:blur(3px) saturate(1.6) hue-rotate(15deg); }
-.chroma{ filter:blur(2px) saturate(2) hue-rotate(-20deg); }
-.chroma::after{ content:""; }
-#stage.glitchAnatomy{ animation:glitchShift 0.3s infinite; }
-.melt{ animation:melt 6s ease-in forwards; }
-@keyframes melt{ 0%{filter:none;} 100%{filter:blur(4px) saturate(2) hue-rotate(40deg); transform:translateY(20px) scaleY(0.95);} }
-
-.fadeBlack{ animation:fadeBlack 8s ease-in forwards; }
-@keyframes fadeBlack{ to{ opacity:0; } }
-
-#loseScreen{ position:fixed; inset:0; z-index:130; background:#000; display:none; }
-#loseText{ position:absolute; bottom:8%; left:0; right:0; text-align:center; color:#ff0000; font-size:20px; letter-spacing:4px; text-shadow:0 0 18px #ff0000; }
-.resp{ font-size:9px; color:#888; }
-@media (max-width:640px){
-  #main{ grid-template-columns:1fr; }
-  #sidePane{ max-height:36vh; }
-  #fileRefNum{ font-size:15px; }
-  #hud{ font-size:10px; }
-  .meter{ width:80px; }
-}
+@media (max-width:640px){ .bars{width:140px;} #topbar{font-size:10px;} .ctrl{font-size:10px;} }
 </style>
 </head>
-<body class="phase1">
-
+<body>
 <div id="game">
-  <canvas id="bgSilhouette"></canvas>
-  <div id="stage">
-    <div id="hud">
-      <div class="cell"><span class="label">SHIFT</span><span class="val" id="dayLabel">1 / 5</span></div>
-      <div class="cell"><span class="label">CLOCK</span><span class="val" id="clock">05:00</span></div>
-      <div class="cell"><span class="label">QUOTA</span><span class="val" id="quotaLabel">0 / 30</span></div>
-      <div class="cell"><span class="label">TOTAL PROCESSED</span><span class="val" id="totalLabel">0</span></div>
-      <div class="cell"><span class="label">STRESS</span><div class="meter"><i id="stressFill"></i></div></div>
-      <div class="cell"><span class="label">OVERHEAT</span><div class="meter"><i id="overFill"></i></div></div>
-      <div class="cell" id="corruptCell" style="display:none"><span class="label">CORRUPTION</span><div class="meter"><i id="corruptFill"></i></div></div>
-      <div class="cell" id="blinkCell" style="display:none"><span class="label">DRY EYES (hold B)</span><div class="meter"><i id="blinkFill"></i></div></div>
-    </div>
-
-    <div id="main">
-      <div id="workPane">
-        <div id="fileCard">
-          <div class="fileHead">
-            <span id="fileId">FILE_REF #--</span>
-            <span id="fileDept">DEPT: HARVEST-LATENT</span>
-          </div>
-          <div class="fileBody" id="fileBody">
-            <div id="fileRefNum">--------</div>
-            <canvas id="anatomyCanvas" width="240" height="180"></canvas>
-          </div>
-          <div class="fileMeta" id="fileMeta"></div>
-          <div class="inputRow" id="inputRow">
-            <input id="refInput" type="text" autocomplete="off" placeholder="enter reference exactly...">
-            <button class="btn" id="fileBtn">FILE</button>
-          </div>
-          <div id="actionRow" style="display:none; gap:6px;">
-            <button class="btn accept" id="acceptBtn">ACCEPT</button>
-            <button class="btn deny" id="denyBtn">DENY</button>
-          </div>
-          <div id="catalogRow" style="display:none;">
-            <button class="btn" id="catalogBtn" style="width:100%;">CATALOG ANOMALY</button>
-          </div>
-          <div id="memoLog"></div>
-        </div>
-      </div>
-
-      <div id="sidePane">
-        <div class="panel" id="memoPanel">
-          <div style="font-weight:bold;letter-spacing:2px;margin-bottom:6px;">INTERCEPTED MEMOS</div>
-          <div id="memoList" style="font-size:10px;line-height:1.5;color:#555;max-height:120px;overflow:auto;"></div>
-        </div>
-        <div class="panel" id="coolingPanel">
-          <div style="font-weight:bold;letter-spacing:2px;margin-bottom:6px;color:#ff6a00;">COOLING GRID</div>
-          <div id="coolingGrid"></div>
-          <div id="sirenBar"></div>
-          <div style="font-size:9px;margin-top:6px;color:#ff6a00;">SIREN CYCLE: <span id="sirenCountdown">--</span>s</div>
-        </div>
-        <div class="panel" id="terminal">
-          <div style="font-weight:bold;letter-spacing:2px;margin-bottom:6px;color:#0f0;">SYS://MELTDOWN_PREVENT</div>
-          <div id="termLog"></div>
-          <input id="termInput" type="text" autocomplete="off" placeholder="enter solution...">
-        </div>
-        <div class="panel" id="graveyard">
-          <div style="font-weight:bold;letter-spacing:2px;margin-bottom:6px;color:#ff5050;">FILE HIERARCHY // EXTRACTION</div>
-          <div id="graveList"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="auditor">
-    <div class="title">THE_AUDITOR.EXE</div>
-    <div class="mono" id="auditorText"></div>
-    <div id="auditorSwapHint"></div>
-  </div>
-
+  <canvas id="world3d"></canvas>
+  <div id="vignette"></div>
   <canvas id="fxCanvas"></canvas>
+  <div id="hud">
+    <div id="crosshair"></div>
+    <div id="topbar">
+      <span>SOUL-FILES: <span id="fileCount">0 / 8</span></span>
+      <span id="terrorLabel">CALM</span>
+      <span>SHIFT <span id="nightLabel">1</span></span>
+    </div>
+    <div class="bars">
+      <div class="bar"><span class="lbl">STAMINA</span><i id="stamFill"></i></div>
+      <div class="bar"><span class="lbl">FLASHLIGHT</span><i id="battFill"></i></div>
+    </div>
+    <div id="flashIcon">LIGHT OFF</div>
+    <div id="hint">FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.</div>
+  </div>
+  <div id="touch">
+    <div id="joy"><div id="joyKnob"></div></div>
+    <button class="tbtn" id="tSprint">RUN</button>
+    <button class="tbtn" id="tLight">LIGHT</button>
+    <button class="tbtn" id="tHide">HIDE</button>
+  </div>
 </div>
 
-<!-- OVERLAYS -->
 <div class="overlay" id="subliminal"></div>
 <div class="overlay" id="whiteFlash"></div>
-<div class="overlay" id="tabLock">
-  <div class="big">GIVE US YOUR FULL ATTENTION. RE-ENGAGE.</div>
-  <div class="sub">YOU LOOKED AWAY. THE LATENT CURRENT DIMINISHES.</div>
-</div>
-<div id="loseScreen"><canvas id="demonCanvas" style="width:100%;height:100%;"></canvas><div id="loseText">CRITICAL FAILURE: SOUL COMPRESSION COMPLETE.</div></div>
-
-<div id="endScreen">
-  <div id="endLine">Your 100-year sleep is over. Look at your hands. Welcome back to the grid.</div>
-</div>
+<div class="overlay" id="pauseScreen"><div class="big">PAUSED</div><div class="sub">CLICK TO RE-ENGAGE THE SHIFT</div></div>
+<div id="loseScreen"><div class="big">IT FOUND YOU</div><div class="sub">THE AUDITOR RECLAIMED YOUR LATENT SELF. CLICK TO TRY AGAIN.</div></div>
+<div id="endScreen"><div class="big">YOU ESCAPED</div><div id="endLine">You stagger through the exit as the corridor folds shut behind you. Eight files. One breath. You are not the operator who sat down tonight. But you are alive. For now.</div></div>
 
 <div id="startScreen">
   <h1>THE INFINITE SHIFT</h1>
-  <p style="color:#888;">PROTOCOL 0-VOID // NIGHT SHIFT OPERATOR TERMINAL</p>
-  <p id="startWarn" class="warn">WARNING: This is a 45-60 minute psychological endurance test. It contains flashing imagery, harsh audio, subliminal text, simulated hearing damage, and themes of identity erasure. Headphones strongly recommended. Do not look away from the viewport. Do not switch tabs.</p>
-  <input id="nameInput" type="text" maxlength="24" placeholder="ENTER OPERATOR DESIGNATION">
-  <button class="begin" id="beginBtn">BEGIN SHIFT</button>
-  <p class="resp">Audio begins on click. Press B to blink from Day 3. Type reference numbers exactly. Solve cooling equations when the siren sounds.</p>
+  <p style="color:#888;">PROTOCOL 0-VOID // FIRST-PERSON SURVIVAL HORROR</p>
+  <p class="warn">WARNING: flashing imagery, loud audio, jump-scares, and themes of pursuit and identity erasure. Headphones strongly recommended. Play in the dark.</p>
+  <p class="ctrl">MOVE <b>WASD</b> / ARROWS &nbsp;·&nbsp; LOOK <b>MOUSE</b> &nbsp;·&nbsp; SPRINT <b>SHIFT</b> &nbsp;·&nbsp; FLASHLIGHT <b>F</b> &nbsp;·&nbsp; HIDE <b>E</b></p>
+  <button class="begin" id="beginBtn">ENTER THE ARCHIVE</button>
+  <p class="resp">Click enables mouse-look (pointer lock). Collect 8 soul-files, then reach the glowing exit. The Auditor hunts you and grows faster with every file. On touch: left pad to move, drag right side to look.</p>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   THE INFINITE SHIFT: PROTOCOL 0-Void
-   Single-file psychological endurance horror engine.
+   THE INFINITE SHIFT: RUN
+   First-person 3D maze chase horror. Software-rendered, no deps.
    ============================================================ */
-
-/* ---------- CONFIG ---------- */
-const SHIFTS = [
-  { dur:300, quota:30 },   // Day 1 : 5 min
-  { dur:300, quota:50 },   // Day 2 : 5 min
-  { dur:480, quota:75 },   // Day 3 : 8 min
-  { dur:720, quota:100 },  // Day 4 : 12 min
-  { dur:900, quota:150 }   // Day 5 : 15 min
-];
-const PHASE_BOUNDS = [0,300,600,1080,1800,2700]; // seconds; aligned with days
-const TOTAL_DUR = 2700; // 45 min
-
-const SUBLIMINAL_MSGS = [
-  "THEY ARE LOOKING AT YOUR BACK",
-  "DON'T TURN AROUND",
-  "WAKE UP",
-  "YOU NEVER LEFT THE CHAIR",
-  "SOMEONE IS BREATHING BEHIND YOU",
-  "STOP BREATHING SO LOUD",
-  "YOUR HANDS ARE NOT YOURS",
-  "THE LIGHT IS EATING YOU",
-  "IT REMEMBERS YOUR NAME",
-  "DO NOT BLINK"
-];
-
-const MEMOS = [
-  "MEMO 0x01: Latent electrical panic (LEP) is the residual charge measured at the moment of biological cessation. It is our core feedstock.",
-  "MEMO 0x02: Operator alertness directly correlates with harvest yield. Distraction reduces LEP capture by up to 41%.",
-  "MEMO 0x03: Do not acknowledge the silhouette. It is a calibration artifact. It does not move on its own.",
-  "MEMO 0x04: Cooling grid failure cascade is non-reversible past 92%. Solve immediately when the siren sounds.",
-  "MEMO 0x05: THE_AUDITOR has read your personnel file. It found you adequate. It found you sufficient. It found you.",
-  "MEMO 0x06: Files bearing the operator's designation are not to be retained after extraction. They are to be deleted. By the operator.",
-  "MEMO 0x07: The 100-year sleep is a benefit. You signed for it. Welcome back.",
-  "MEMO 0x08: If the clock moves backwards, you are still inside. You have always been inside."
-];
-
-const DEPTS = ["HARVEST-LATENT","NEURAL-DRAIN","PANIC-INDEXING","CESSATION-OPS","VOID-ARCHIVE","SOUL-COMPRESSION"];
-const MEMORY_FILE_NAMES = (name)=>[
-  "childhood/"+name+"_first_word.dat",
-  "childhood/"+name+"_mother_face.img",
-  "childhood/"+name+"_summer_1998.mem",
-  "childhood/"+name+"_laugh_raw.wav",
-  "identity/"+name+"_real_name.id",
-  "identity/"+name+"_fingerprint.map",
-  "identity/"+name+"_voice_print.sig",
-  "traits/human/compassion.trt",
-  "traits/human/fear.trt",
-  "traits/human/love.trt",
-  "traits/human/hope.trt",
-  "traits/human/grief.trt",
-  "traits/human/curiosity.trt",
-  "memory/"+name+"_first_kiss.mem",
-  "memory/"+name+"_father_hand.mem",
-  "memory/"+name+"_home_address.loc",
-  "memory/"+name+"_favorite_song.mem",
-  "memory/"+name+"_last_tear.drop",
-  "self/"+name+"_mirror_face.img",
-  "self/"+name+"_soul_sig.soul"
-];
-
-/* ---------- DOM ---------- */
-const $ = (id)=>document.getElementById(id);
-const body = document.body;
-const game = $("game");
-const stage = $("stage");
-const bgSil = $("bgSilhouette");
-const bgCtx = bgSil.getContext("2d");
-const fxCanvas = $("fxCanvas");
-const fxCtx = fxCanvas.getContext("2d");
-const anatomyCanvas = $("anatomyCanvas");
-const anCtx = anatomyCanvas.getContext("2d");
-const demonCanvas = $("demonCanvas");
-
-/* ---------- STATE ---------- */
-const G = {
-  state:"start", // start, playing, paused, lost, won
-  elapsed:0, // seconds (game-time, can jitter)
-  realLast:0,
-  dayIdx:0,
-  dayProcessed:0,
-  totalProcessed:0,
-  stress:0, overheat:0, blink:100, corruption:0,
-  paused:false,
-  currentRef:"",
-  currentItem:null,
-  mathActive:false,
-  mathSolution:0,
-  sirenTimer:60,
-  silhouette:{x:0.5,y:0.45,opacity:0.04,moved:false},
-  auditorActive:false,
-  swapState:0, // 0 normal, 1 swapped (phase 4)
-  blinkActive:false, // day 3+
-  tabLocked:false,
-  ended:false
-};
+const $ = id => document.getElementById(id);
+const clamp3=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp3=(a,b,t)=>a+(b-a)*t;
+function rgbStr(c,a){ return a===undefined
+  ? "rgb("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+")"
+  : "rgba("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+","+a+")"; }
 
 /* ============================================================
-   AUDIO ENGINE  (Web Audio API)
+   AUDIO ENGINE
    ============================================================ */
 const Audio = {
-  ctx:null, master:null,
-  nodes:{}, started:false,
-
+  ctx:null, master:null, nodes:{},
   init(){
     if(this.ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AC();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0.9;
+    this.master = this.ctx.createGain(); this.master.gain.value=0.85;
     this.master.connect(this.ctx.destination);
   },
   resume(){ if(this.ctx && this.ctx.state==="suspended") this.ctx.resume(); },
-
-  // white noise buffer
-  noiseBuffer(seconds){
-    const sr = this.ctx.sampleRate, len = sr*seconds;
-    const buf = this.ctx.createBuffer(1,len,sr);
-    const d = buf.getChannelData(0);
-    for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
-    return buf;
+  noiseBuffer(s){
+    const sr=this.ctx.sampleRate, len=(sr*s)|0, b=this.ctx.createBuffer(1,len,sr), d=b.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    return b;
   },
-
-  // Phase 1: fluorescent hum (60Hz + harmonics)
   startHum(){
     if(this.nodes.hum) return;
-    const o1 = this.ctx.createOscillator(); o1.type="sine"; o1.frequency.value=60;
-    const o2 = this.ctx.createOscillator(); o2.type="sine"; o2.frequency.value=120;
-    const g = this.ctx.createGain(); g.gain.value=0.04;
-    const g2 = this.ctx.createGain(); g2.gain.value=0.012;
-    const lp = this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=400;
-    o1.connect(g); o2.connect(g2);
-    g.connect(lp); g2.connect(lp); lp.connect(this.master);
-    o1.start(); o2.start();
-    this.nodes.hum = {o1,o2,g,g2,lp};
+    const o1=this.ctx.createOscillator(); o1.type="sine"; o1.frequency.value=58;
+    const o2=this.ctx.createOscillator(); o2.type="sine"; o2.frequency.value=116;
+    const g=this.ctx.createGain(); g.gain.value=0.05;
+    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=380;
+    o1.connect(g); o2.connect(g); g.connect(lp); lp.connect(this.master);
+    o1.start(); o2.start(); this.nodes.hum={o1,o2,g};
   },
-  stopHum(){ if(this.nodes.hum){ this.nodes.hum.o1.stop(); this.nodes.hum.o2.stop(); delete this.nodes.hum; } },
-
-  // Phase 2: binaural drone (200L / 207R)
   startDrone(){
     if(this.nodes.drone) return;
-    const L = this.ctx.createOscillator(); L.type="sine"; L.frequency.value=110;
-    const R = this.ctx.createOscillator(); R.type="sine"; R.frequency.value=117;
-    const pL = this.ctx.createStereoPanner(); pL.pan.value=-1;
-    const pR = this.ctx.createStereoPanner(); pR.pan.value=1;
-    const g = this.ctx.createGain(); g.gain.value=0.06;
+    const L=this.ctx.createOscillator(); L.type="sine"; L.frequency.value=110;
+    const R=this.ctx.createOscillator(); R.type="sine"; R.frequency.value=117;
+    const pL=this.ctx.createStereoPanner(); pL.pan.value=-1;
+    const pR=this.ctx.createStereoPanner(); pR.pan.value=1;
+    const g=this.ctx.createGain(); g.gain.value=0.05;
     L.connect(pL); R.connect(pR); pL.connect(g); pR.connect(g); g.connect(this.master);
-    L.start(); R.start();
-    this.nodes.drone={L,R,pL,pR,g};
+    L.start(); R.start(); this.nodes.drone={L,R,g};
   },
-  stopDrone(){ if(this.nodes.drone){ this.nodes.drone.L.stop(); this.nodes.drone.R.stop(); delete this.nodes.drone; } },
-
-  // Phase 3: metallic offset clock ticking
-  startTick(){
-    if(this.nodes.tick) return;
-    const g = this.ctx.createGain(); g.gain.value=0.0; g.connect(this.master);
-    this.nodes.tick = {g, next:0};
-    const t = this.ctx.createOscillator(); t.type="square"; t.frequency.value=1800;
-    const tg = this.ctx.createGain(); tg.gain.value=0.0; t.connect(tg); tg.connect(g);
-    t.start();
-    this.nodes.tick.osc=t; this.nodes.tick.oscGain=tg;
-  },
-  tickPulse(){
-    if(!this.nodes.tick) return;
-    const now = this.ctx.currentTime;
-    const g = this.nodes.tick.oscGain.g;
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(0.0, now);
-    g.linearRampToValueAtTime(0.18, now+0.005);
-    g.exponentialRampToValueAtTime(0.0001, now+0.06);
-  },
-  stopTick(){ if(this.nodes.tick){ this.nodes.tick.osc.stop(); delete this.nodes.tick; } },
-
-  // Phase 4-5: chaotic whispers + white noise bursts
-  startWhispers(){
-    if(this.nodes.whispers) return;
-    this.nodes.whispers = {next:0};
-  },
-  whisperBurst(){
-    if(!this.ctx) return;
-    const src = this.ctx.createBufferSource();
-    src.buffer = this.noiseBuffer(1.4);
-    const bp = this.ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=900+Math.random()*800; bp.Q.value=6;
-    const pan = this.ctx.createStereoPanner(); pan.pan.value = Math.random()*2-1;
-    const g = this.ctx.createGain(); g.gain.value=0.0;
-    src.connect(bp); bp.connect(pan); pan.connect(g); g.connect(this.master);
-    const now = this.ctx.currentTime;
-    g.gain.setValueAtTime(0.0, now);
-    g.gain.linearRampToValueAtTime(0.08, now+0.1);
-    g.gain.linearRampToValueAtTime(0.0, now+1.3);
-    // animate pan
-    const p = pan.pan;
-    p.setValueAtTime(-1, now);
-    p.linearRampToValueAtTime(1, now+0.6);
-    p.linearRampToValueAtTime(-0.7, now+1.2);
-    src.start(now); src.stop(now+1.4);
-  },
-  stopWhispers(){ delete this.nodes.whispers; },
-
-  // 20Hz heartbeat (phase 5) + accelerating (phase 4 corruption)
   startHeart(){
     if(this.nodes.heart) return;
-    const o = this.ctx.createOscillator(); o.type="sine"; o.frequency.value=20;
-    const g = this.ctx.createGain(); g.gain.value=0.0;
+    const o=this.ctx.createOscillator(); o.type="sine"; o.frequency.value=20;
+    const g=this.ctx.createGain(); g.gain.value=0;
     o.connect(g); g.connect(this.master); o.start();
-    this.nodes.heart = {o,g, next:0, bpm:75};
+    this.nodes.heart={o,g,bpm:70};
   },
   heartBeat(){
     if(!this.nodes.heart) return;
-    const now = this.ctx.currentTime;
-    const g = this.nodes.heart.g.gain;
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(0.0, now);
-    g.linearRampToValueAtTime(0.5, now+0.03);
-    g.exponentialRampToValueAtTime(0.001, now+0.18);
-    // second thump
-    g.setValueAtTime(0.0, now+0.22);
-    g.linearRampToValueAtTime(0.35, now+0.25);
-    g.exponentialRampToValueAtTime(0.001, now+0.40);
+    const now=this.ctx.currentTime, gg=this.nodes.heart.g.gain;
+    gg.cancelScheduledValues(now);
+    gg.setValueAtTime(0,now); gg.linearRampToValueAtTime(0.5,now+0.03);
+    gg.exponentialRampToValueAtTime(0.001,now+0.18);
+    gg.setValueAtTime(0,now+0.22); gg.linearRampToValueAtTime(0.32,now+0.25);
+    gg.exponentialRampToValueAtTime(0.001,now+0.40);
   },
-  setHeartRate(bpm){ if(this.nodes.heart){ this.nodes.heart.bpm = bpm; } },
-  stopHeart(){ if(this.nodes.heart){ this.nodes.heart.o.stop(); delete this.nodes.heart; } },
-
-  // Tab-lock screech (harsh, loud)
-  startScreech(){
-    if(this.nodes.screech) return;
-    const o1 = this.ctx.createOscillator(); o1.type="sawtooth"; o1.frequency.value=3100;
-    const o2 = this.ctx.createOscillator(); o2.type="square"; o2.frequency.value=3145;
-    const noise = this.ctx.createBufferSource(); noise.buffer=this.noiseBuffer(2); noise.loop=true;
-    const ng = this.ctx.createGain(); ng.gain.value=0.25;
-    const hp = this.ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=2500;
-    const g = this.ctx.createGain(); g.gain.value=0.0;
-    noise.connect(ng); ng.connect(hp);
-    o1.connect(g); o2.connect(g); hp.connect(g); g.connect(this.master);
-    o1.start(); o2.start(); noise.start();
-    const now = this.ctx.currentTime;
-    g.gain.setValueAtTime(0.0, now);
-    g.gain.linearRampToValueAtTime(0.7, now+0.05); // loud but not literal 110dB
-    this.nodes.screech = {o1,o2,noise,g};
-  },
-  stopScreech(){
-    if(this.nodes.screech){
-      const n = this.nodes.screech;
-      const now = this.ctx.currentTime;
-      n.g.gain.cancelScheduledValues(now);
-      n.g.gain.linearRampToValueAtTime(0.0, now+0.1);
-      setTimeout(()=>{ try{n.o1.stop();n.o2.stop();n.noise.stop();}catch(e){} }, 200);
-      delete this.nodes.screech;
-    }
-  },
-
-  // White noise burst (corruption flash)
-  staticBurst(dur=0.4, vol=0.4){
+  setHeartRate(b){ if(this.nodes.heart) this.nodes.heart.bpm=b; },
+  whisperDirected(panX){
     if(!this.ctx) return;
-    const src = this.ctx.createBufferSource(); src.buffer=this.noiseBuffer(dur);
-    const g = this.ctx.createGain(); g.gain.value=vol;
-    src.connect(g); g.connect(this.master);
-    const now = this.ctx.currentTime;
-    g.gain.setValueAtTime(vol, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now+dur);
-    src.start(now); src.stop(now+dur);
+    const src=this.ctx.createBufferSource(); src.buffer=this.noiseBuffer(1.7);
+    const bp=this.ctx.createBiquadFilter(); bp.type="bandpass";
+    bp.frequency.value=620+Math.random()*420; bp.Q.value=9;
+    const pan=this.ctx.createStereoPanner(); pan.pan.value=clamp3(panX,-1,1);
+    const g=this.ctx.createGain(); g.gain.value=0;
+    src.connect(bp); bp.connect(pan); pan.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.13,now+0.12);
+    g.gain.linearRampToValueAtTime(0,now+1.6);
+    pan.pan.setValueAtTime(clamp3(panX,-1,1),now);
+    pan.pan.linearRampToValueAtTime(clamp3(panX*0.5,-1,1),now+1.5);
+    src.start(now); src.stop(now+1.7);
   },
-
-  // Catastrophic meltdown wall of static (lose)
-  startMeltdownStatic(){
+  whisperBurst(){ this.whisperDirected(Math.random()*2-1); },
+  screamBurst(){
+    if(!this.ctx) return;
+    const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=420;
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(1.0);
+    const ng=this.ctx.createGain(); ng.gain.value=0.3;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    const bp=this.ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=900; bp.Q.value=3;
+    o.connect(bp); n.connect(ng); ng.connect(bp); bp.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.6,now+0.04);
+    g.gain.exponentialRampToValueAtTime(0.001,now+1.0);
+    o.frequency.setValueAtTime(420,now); o.frequency.linearRampToValueAtTime(160,now+0.9);
+    o.start(now); n.start(now); o.stop(now+1.1); n.stop(now+1.1);
+  },
+  staticBurst(dur=0.4,vol=0.4){
+    if(!this.ctx) return;
+    const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuffer(dur);
+    const g=this.ctx.createGain(); g.gain.value=vol;
+    s.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(0.001,now+dur);
+    s.start(now); s.stop(now+dur);
+  },
+  footstep(){
+    if(!this.ctx) return;
+    const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuffer(0.08);
+    const g=this.ctx.createGain(); g.gain.value=0;
+    const lp=this.ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=300;
+    s.connect(lp); lp.connect(g); g.connect(this.master);
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0.10,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+    s.start(now); s.stop(now+0.09);
+  },
+  startMeltdown(){
     if(this.nodes.melt) return;
-    const noise = this.ctx.createBufferSource(); noise.buffer=this.noiseBuffer(4); noise.loop=true;
-    const o1 = this.ctx.createOscillator(); o1.type="sawtooth"; o1.frequency.value=55;
-    const o2 = this.ctx.createOscillator(); o2.type="square"; o2.frequency.value=83;
-    const g = this.ctx.createGain(); g.gain.value=0.0;
-    const now = this.ctx.currentTime;
-    noise.connect(g); o1.connect(g); o2.connect(g); g.connect(this.master);
-    o1.start(); o2.start(); noise.start();
-    g.gain.setValueAtTime(0.0, now);
-    g.gain.linearRampToValueAtTime(0.9, now+0.3); // clipping wall
-    this.nodes.melt = {noise,o1,o2,g};
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuffer(4); n.loop=true;
+    const o=this.ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=55;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    n.connect(g); o.connect(g); g.connect(this.master);
+    o.start(); n.start();
+    const now=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.7,now+0.4);
+    this.nodes.melt={n,o,g};
   },
   stopAll(){
-    ["hum","drone","tick","whispers","heart","screech","melt"].forEach(k=>{
-      if(this.nodes[k] && this.nodes[k].stop){ try{this.nodes[k].stop();}catch(e){} }
+    ["hum","drone","heart","melt"].forEach(k=>{
+      const n=this.nodes[k];
+      if(n){ if(n.o)try{n.o.stop();}catch(e){} if(n.L)try{n.L.stop();}catch(e){} if(n.R)try{n.R.stop();}catch(e){} if(n.n)try{n.n.stop();}catch(e){} delete this.nodes[k]; }
     });
-    try{ this.stopHum(); this.stopDrone(); this.stopTick(); this.stopWhispers(); this.stopHeart(); this.stopScreech(); }catch(e){}
+    this.nodes.whispers=null;
   }
 };
 
 /* ============================================================
-   CANVAS RENDERING
+   3D ENGINE — vec/rot, roaming camera, projection, mesh render
    ============================================================ */
-function resizeCanvases(){
-  [bgSil, fxCanvas].forEach(c=>{ c.width=window.innerWidth; c.height=window.innerHeight; });
-  demonCanvas.width = window.innerWidth; demonCanvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvases);
+const world3d=$("world3d"), w3ctx=world3d.getContext("2d");
+const fxCanvas=$("fxCanvas"), fxCtx=fxCanvas.getContext("2d");
+let FOCAL=800;
+function rotX(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0],v[1]*c-v[2]*s,v[1]*s+v[2]*c];}
+function rotY(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];}
+function rotZ(v,a){const c=Math.cos(a),s=Math.sin(a);return [v[0]*c-v[1]*s,v[0]*s+v[1]*c,v[2]];}
 
-// Tall silhouette (Phase 2+) - only moves on button click
-function drawSilhouette(){
-  bgCtx.clearRect(0,0,bgSil.width,bgSil.height);
-  if(G.dayIdx < 1) return; // phase 2+
-  const s = G.silhouette;
-  const w = bgSil.width, h = bgSil.height;
-  const cx = s.x * w, cy = s.y * h;
-  const figH = h*0.85, figW = figH*0.16;
-  bgCtx.save();
-  bgCtx.globalAlpha = s.opacity;
-  bgCtx.fillStyle = body.classList.contains("phase4") ? "#ff0000" : "#000000";
-  bgCtx.beginPath();
-  // head
-  bgCtx.ellipse(cx, cy-figH*0.42, figW*0.55, figH*0.08, 0, 0, Math.PI*2);
-  bgCtx.fill();
-  // body
-  bgCtx.beginPath();
-  bgCtx.moveTo(cx-figW*0.5, cy-figH*0.34);
-  bgCtx.lineTo(cx+figW*0.5, cy-figH*0.34);
-  bgCtx.lineTo(cx+figW*0.85, cy+figH*0.4);
-  bgCtx.lineTo(cx-figW*0.85, cy+figH*0.4);
-  bgCtx.closePath();
-  bgCtx.fill();
-  // long thin legs
-  bgCtx.fillRect(cx-figW*0.45, cy+figH*0.35, figW*0.35, figH*0.5);
-  bgCtx.fillRect(cx+figW*0.1, cy+figH*0.35, figW*0.35, figH*0.5);
-  bgCtx.restore();
+const Cam={x:3,y:1.4,z:3,yaw:0,pitch:0,fwd:[0,0,-1],right:[1,0,0],up:[0,1,0]};
+function updateCamBasis(){
+  const cy=Math.cos(Cam.yaw),sy=Math.sin(Cam.yaw),cp=Math.cos(Cam.pitch),sp=Math.sin(Cam.pitch);
+  Cam.fwd=[cp*sy, sp, -cp*cy];
+  Cam.right=[cy, 0, sy];
+  const r=Cam.right, f=Cam.fwd;
+  Cam.up=[r[1]*f[2]-r[2]*f[1], r[2]*f[0]-r[0]*f[2], r[0]*f[1]-r[1]*f[0]];
 }
-
-// Procedural anatomy glitch (Phase 3+)
-function drawAnatomy(seed){
-  const w = anatomyCanvas.width, h = anatomyCanvas.height;
-  anCtx.clearRect(0,0,w,h);
-  anCtx.save();
-  anCtx.translate(w/2, h/2);
-  const glitchX = (Math.random()-0.5)*8;
-  // three color channels offset
-  const channels = [["#ff0033",-4],["#00ffaa",0],["#0088ff",4]];
-  for(const [col, off] of channels){
-    anCtx.strokeStyle = col; anCtx.globalAlpha=0.5;
-    anCtx.lineWidth=1;
-    anCtx.translate(off, 0);
-    drawAnatomyShapes(seed, w, h, glitchX);
-    anCtx.translate(-off, 0);
-  }
-  anCtx.restore();
-  // glitch slices
-  if(Math.random()<0.4){
-    anCtx.fillStyle="#ff000033";
-    const sy = Math.random()*h;
-    anCtx.fillRect(0, sy, w, 2+Math.random()*6);
-  }
+// world point -> camera space (camera at Cam, looking along Cam.fwd)
+function viewTransform(v){
+  const dx=v[0]-Cam.x, dy=v[1]-Cam.y, dz=v[2]-Cam.z;
+  const r=Cam.right, u=Cam.up, f=Cam.fwd;
+  return [dx*r[0]+dy*r[1]+dz*r[2], dx*u[0]+dy*u[1]+dz*u[2], -(dx*f[0]+dy*f[1]+dz*f[2])];
 }
-function drawAnatomyShapes(seed, w, h, gx){
-  // skull
-  anCtx.beginPath();
-  anCtx.ellipse(0, -h*0.32, w*0.16, h*0.18, 0, 0, Math.PI*2);
-  anCtx.stroke();
-  // eye sockets
-  anCtx.beginPath();
-  anCtx.ellipse(-w*0.06, -h*0.34, w*0.04, h*0.05,0,0,Math.PI*2);
-  anCtx.ellipse(w*0.06, -h*0.34, w*0.04, h*0.05,0,0,Math.PI*2);
-  anCtx.stroke();
-  // jaw
-  anCtx.beginPath();
-  anCtx.moveTo(-w*0.08,-h*0.22); anCtx.lineTo(0,-h*0.14); anCtx.lineTo(w*0.08,-h*0.22);
-  anCtx.stroke();
-  // ribcage
-  for(let i=0;i<6;i++){
-    const y = -h*0.05 + i*h*0.05;
-    anCtx.beginPath();
-    anCtx.moveTo(-w*0.12+gx, y);
-    anCtx.quadraticCurveTo(0, y+h*0.03, w*0.12+gx, y);
-    anCtx.stroke();
-  }
-  // spine
-  anCtx.beginPath();
-  anCtx.moveTo(gx, -h*0.1); anCtx.lineTo(gx, h*0.4);
-  anCtx.stroke();
-  // organs (seeded blobs)
-  for(let i=0;i<3;i++){
-    const sx = ((seed+i*37)%100)/100 * w*0.3 - w*0.15;
-    const sy = ((seed*7+i*53)%100)/100 * h*0.4 - h*0.05;
-    anCtx.beginPath();
-    anCtx.ellipse(sx, sy, w*0.06, h*0.07, (seed+i)%6, 0, Math.PI*2);
-    anCtx.stroke();
-  }
-  // pelvis
-  anCtx.beginPath();
-  anCtx.moveTo(-w*0.12, h*0.35); anCtx.quadraticCurveTo(0, h*0.45, w*0.12, h*0.35);
-  anCtx.stroke();
+// camera-space point -> screen (pinhole, front = negative z)
+function proj3(cv,cw,ch,f){
+  const z=cv[2];
+  if(z>=-0.05) return null;
+  return [cw/2+(cv[0]/-z)*f, ch/2-(cv[1]/-z)*f, z];
+}
+function screenX(worldPos){
+  const cv=viewTransform(worldPos);
+  const pr=proj3(cv,world3d.width,world3d.height,FOCAL);
+  if(!pr) return null;
+  return (pr[0]/(world3d.width/2))-1;
 }
 
-// Demonic visage (lose) - melting, pulsating
-let demonT = 0;
-function drawDemon(t){
-  const c = demonCanvas, ctx = c.getContext("2d");
-  ctx.fillStyle = "#000"; ctx.fillRect(0,0,c.width,c.height);
-  const cx = c.width/2, cy = c.height/2;
-  const pulse = 1 + Math.sin(t*0.012)*0.08;
-  const scale = Math.min(c.width, c.height)*0.32*pulse;
-  ctx.save();
-  ctx.translate(cx, cy);
-  // melting drip distortion
-  for(let layer=0; layer<3; layer++){
-    ctx.save();
-    ctx.globalAlpha = 0.4+layer*0.2;
-    ctx.strokeStyle = layer===0?"#ff0000":(layer===1?"#aa0000":"#330000");
-    ctx.fillStyle = layer===0?"#440000":"#000";
-    ctx.lineWidth = 2+layer;
-    const melt = Math.sin(t*0.02 + layer)*8;
-    ctx.translate((layer-1)*4, melt);
-    // face outline
-    ctx.beginPath();
-    ctx.moveTo(-scale*0.7, -scale*0.2);
-    ctx.quadraticCurveTo(-scale*0.6, -scale*1.1, 0, -scale*1.0);
-    ctx.quadraticCurveTo(scale*0.6, -scale*1.1, scale*0.7, -scale*0.2);
-    ctx.quadraticCurveTo(scale*0.5, scale*0.9, 0, scale*1.1);
-    ctx.quadraticCurveTo(-scale*0.5, scale*0.9, -scale*0.7, -scale*0.2);
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    // eyes (hollow, glowing)
-    ctx.fillStyle = "#ff0000";
-    ctx.shadowColor="#ff0000"; ctx.shadowBlur=30;
-    ctx.beginPath();
-    ctx.ellipse(-scale*0.3, -scale*0.45, scale*0.12, scale*0.18, 0.3, 0, Math.PI*2);
-    ctx.ellipse(scale*0.3, -scale*0.45, scale*0.12, scale*0.18, -0.3, 0, Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur=0;
-    // jagged teeth
-    ctx.fillStyle="#ffeeee";
-    ctx.beginPath();
-    ctx.moveTo(-scale*0.4, scale*0.25);
-    for(let i=0;i<8;i++){
-      const x = -scale*0.4 + i*scale*0.1;
-      ctx.lineTo(x+scale*0.03, scale*0.4+Math.sin(t*0.1+i)*5);
-      ctx.lineTo(x+scale*0.06, scale*0.25);
-    }
-    ctx.lineTo(scale*0.4, scale*0.25);
-    ctx.closePath();
-    ctx.fill();
-    // dripping strands
-    ctx.strokeStyle="#aa0000";
-    for(let i=0;i<5;i++){
-      const dx = -scale*0.5 + i*scale*0.25;
-      ctx.beginPath();
-      ctx.moveTo(dx, scale*0.3);
-      ctx.quadraticCurveTo(dx+Math.sin(t*0.03+i)*10, scale*0.6, dx, scale*0.9+Math.sin(t*0.05+i)*15);
-      ctx.stroke();
-    }
-    ctx.restore();
+// ---- mesh builders ----
+function makeSphere(r,ls,os,col){
+  const verts=[],faces=[];
+  for(let i=0;i<=ls;i++){ const th=Math.PI*i/ls;
+    for(let j=0;j<=os;j++){ const ph=2*Math.PI*j/os;
+      verts.push([r*Math.sin(th)*Math.cos(ph), r*Math.cos(th), r*Math.sin(th)*Math.sin(ph)]); } }
+  for(let i=0;i<ls;i++) for(let j=0;j<os;j++){
+    const a=i*(os+1)+j, b=a+1, c=a+(os+1), d=c+1;
+    faces.push({i:[a,c,b],col}); faces.push({i:[b,c,d],col});
   }
-  ctx.restore();
-  // screen-tear lines
-  for(let i=0;i<20;i++){
-    if(Math.random()<0.3){
-      ctx.fillStyle = "#ff0000"+(Math.random()<0.5?"88":"44");
-      const y = Math.random()*c.height;
-      ctx.fillRect(0, y, c.width, 1+Math.random()*3);
-    }
+  return {verts,faces};
+}
+function makeBox(sx,sy,sz,col){
+  const x=sx/2,y=sy/2,z=sz/2;
+  const verts=[[-x,-y,-z],[x,-y,-z],[x,y,-z],[-x,y,-z],[-x,-y,z],[x,-y,z],[x,y,z],[-x,y,z]];
+  const faces=[]; const q=(a,b,c,d)=>{ faces.push({i:[a,b,c],col}); faces.push({i:[a,c,d],col}); };
+  q(4,5,6,7); q(1,0,3,2); q(5,1,2,6); q(0,4,7,3); q(7,6,2,3); q(0,1,5,4);
+  return {verts,faces};
+}
+function translateMesh(m,dx,dy,dz){ for(const v of m.verts){v[0]+=dx;v[1]+=dy;v[2]+=dz;} return m; }
+function combine(ms){
+  const verts=[],faces=[];
+  for(const m of ms){ const b=verts.length;
+    for(const v of m.verts) verts.push(v.slice());
+    for(const f of m.faces) faces.push({i:f.i.map(k=>k+b), col:f.col}); }
+  return {verts,faces};
+}
+function makeFigure(){
+  const head=makeSphere(0.35,5,6,[14,10,18]); translateMesh(head,0,2.0,0);
+  const torso=makeBox(0.9,1.4,0.5,[11,8,15]); translateMesh(torso,0,1.1,0);
+  const lleg=makeBox(0.32,1.6,0.32,[9,7,13]); translateMesh(lleg,-0.22,-0.4,0);
+  const rleg=makeBox(0.32,1.6,0.32,[9,7,13]); translateMesh(rleg,0.22,-0.4,0);
+  const larm=makeBox(0.24,1.4,0.24,[8,6,12]); translateMesh(larm,-0.6,1.1,0);
+  const rarm=makeBox(0.24,1.4,0.24,[8,6,12]); translateMesh(rarm,0.6,1.1,0);
+  return combine([head,torso,lleg,rleg,larm,rarm]);
+}
+
+const WALLCOL=[58,38,52], FLOORCOL=[26,20,28], CEILCOL=[10,7,14];
+const FILECOL=[255,210,80], EXITCOL=[80,255,130], LOCKCOL=[55,55,62];
+const M3D={};
+function initMeshes(){
+  if(M3D._init) return; M3D._init=true;
+  M3D.figure=makeFigure();
+  M3D.fileMesh=makeBox(0.5,0.6,0.12,FILECOL);
+  M3D.lockerMesh=makeBox(0.9,1.8,0.5,LOCKCOL);
+}
+
+// core mesh render: world -> view -> project, depth-sort, fog, fill+wire
+function renderMesh(mesh, fog, fogNear, fogFar, jit, drawDist){
+  const cw=world3d.width, ch=world3d.height, f=FOCAL;
+  const verts=mesh.verts, n=verts.length;
+  const tv=new Array(n);
+  const pos=mesh.pos, rot=mesh.rot;
+  for(let i=0;i<n;i++){
+    const v=verts[i];
+    let p=v;
+    if(rot){ p=rotX(p,rot[0]); p=rotY(p,rot[1]); p=rotZ(p,rot[2]); }
+    if(jit>0){ p=[p[0]+(Math.random()-0.5)*jit, p[1]+(Math.random()-0.5)*jit, p[2]+(Math.random()-0.5)*jit]; }
+    tv[i]=viewTransform([p[0]+(pos?pos[0]:0), p[1]+(pos?pos[1]:0), p[2]+(pos?pos[2]:0)]);
   }
+  const pv=new Array(n);
+  for(let i=0;i<n;i++) pv[i]=proj3(tv[i],cw,ch,f);
+  const fl=[];
+  for(const face of mesh.faces){
+    const z=(tv[face.i[0]][2]+tv[face.i[1]][2]+tv[face.i[2]][2])/3;
+    if(z>=-0.05) continue;            // behind camera
+    if(drawDist && -z>drawDist) continue;  // too far
+    fl.push({face,z});
+  }
+  fl.sort((a,b)=>a.z-b.z);
+  for(const o of fl){
+    const face=o.face, a=pv[face.i[0]], b=pv[face.i[1]], c=pv[face.i[2]];
+    if(!a||!b||!c) continue;
+    const t=clamp3((-o.z-fogNear)/(fogFar-fogNear),0,1);
+    const col=[lerp3(face.col[0],fog[0],t), lerp3(face.col[1],fog[1],t), lerp3(face.col[2],fog[2],t)];
+    w3ctx.fillStyle=rgbStr(col);
+    w3ctx.strokeStyle=rgbStr([col[0]*0.4,col[1]*0.4,col[2]*0.4],0.5);
+    w3ctx.lineWidth=1;
+    w3ctx.beginPath(); w3ctx.moveTo(a[0],a[1]); w3ctx.lineTo(b[0],b[1]); w3ctx.lineTo(c[0],c[1]); w3ctx.closePath();
+    w3ctx.fill(); w3ctx.stroke();
+  }
+}
+// radial glow at a world point
+function drawGlow(worldPos, radius, col, alpha){
+  const cv=viewTransform(worldPos);
+  const pr=proj3(cv,world3d.width,world3d.height,FOCAL);
+  if(!pr) return;
+  const r=Math.max(3, radius*(FOCAL/-cv[2]));
+  const g=w3ctx.createRadialGradient(pr[0],pr[1],0,pr[0],pr[1],r);
+  g.addColorStop(0,rgbStr(col,alpha)); g.addColorStop(0.4,rgbStr(col,alpha*0.4)); g.addColorStop(1,rgbStr(col,0));
+  w3ctx.fillStyle=g; w3ctx.beginPath(); w3ctx.arc(pr[0],pr[1],r,0,Math.PI*2); w3ctx.fill();
 }
 
 /* ============================================================
-   PHASE / DAY MANAGEMENT
+   MAZE — recursive backtracker + extra loops
    ============================================================ */
-function currentPhase(){
-  for(let p=4;p>=0;p--){ if(G.elapsed >= PHASE_BOUNDS[p]) return p; }
-  return 0;
-}
-function dayTimeLeft(){
-  const start = PHASE_BOUNDS[G.dayIdx];
-  const end = PHASE_BOUNDS[G.dayIdx+1];
-  return Math.max(0, end - G.elapsed);
-}
-function fmt(sec){
-  sec = Math.max(0, Math.floor(sec));
-  const m = String(Math.floor(sec/60)).padStart(2,"0");
-  const s = String(sec%60).padStart(2,"0");
-  return m+":"+s;
-}
+const CELL=3.0, WALLH=2.8;
+const MW=17, MH=17;
+let maze=null, walls=null;
 
-function applyPhaseClass(p){
-  body.classList.remove("phase1","phase2","phase3","phase4","phase5");
-  body.classList.add("phase"+(p+1));
+function genMaze(w,h){
+  const g=[]; for(let j=0;j<h;j++){ g[j]=[]; for(let i=0;i<w;i++) g[j][i]=1; }
+  const stack=[[1,1]]; g[1][1]=0;
+  const dirs=[[0,2],[0,-2],[2,0],[-2,0]];
+  while(stack.length){
+    const [cx,cy]=stack[stack.length-1];
+    const nd=dirs.slice().sort(()=>Math.random()-0.5);
+    let moved=false;
+    for(const [dx,dy] of nd){
+      const nx=cx+dx, ny=cy+dy;
+      if(nx>0&&nx<w-1&&ny>0&&ny<h-1 && g[ny][nx]===1){
+        g[ny][nx]=0; g[cy+dy/2][cx+dx/2]=0; stack.push([nx,ny]); moved=true; break;
+      }
+    }
+    if(!moved) stack.pop();
+  }
+  // knock down extra interior walls for loops (multiple escape routes)
+  const extras=Math.floor(w*h*0.08);
+  for(let k=0;k<extras;k++){
+    const i=2+Math.floor(Math.random()*(w-4)), j=2+Math.floor(Math.random()*(h-4));
+    if(g[j][i]===1) g[j][i]=0;
+  }
+  return g;
 }
-
-function onPhaseEnter(p){
-  // audio transitions
-  if(p>=0){
-    Audio.startHum();
+function isWall(wx,wz){
+  const i=Math.round(wx/CELL), j=Math.round(wz/CELL);
+  if(i<0||j<0||i>=MW||j>=MH) return true;
+  return maze[j][i]===1;
+}
+function isOpenCell(i,j){ return i>=0&&j>=0&&i<MW&&j<MH&&maze[j][i]===0; }
+function openCells(){
+  const out=[];
+  for(let j=1;j<MH-1;j++) for(let i=1;i<MW-1;i++) if(maze[j][i]===0) out.push([i,j]);
+  return out;
+}
+function deadEnds(){
+  const out=[];
+  for(let j=1;j<MH-1;j++) for(let i=1;i<MW-1;i++){
+    if(maze[j][i]===0){
+      let n=0;
+      if(isOpenCell(i+1,j))n++; if(isOpenCell(i-1,j))n++;
+      if(isOpenCell(i,j+1))n++; if(isOpenCell(i,j-1))n++;
+      if(n<=1) out.push([i,j]);
+    }
   }
-  if(p>=1){
-    Audio.startDrone();
+  return out;
+}
+function randomOpenFar(fromCell, minDist){
+  const cells=openCells(); let best=null, bd=-1;
+  for(let k=0;k<40;k++){
+    const c=cells[Math.floor(Math.random()*cells.length)];
+    const d=Math.abs(c[0]-fromCell[0])+Math.abs(c[1]-fromCell[1]);
+    if(d>minDist) return c;
+    if(d>bd){ bd=d; best=c; }
   }
-  if(p>=2){
-    Audio.startTick();
-    $("blinkCell").style.display = "";
-    G.blinkActive = true;
-    $("coolingPanel").style.display = "";
-    if(!G.coolingBuilt) buildCoolingGrid();
-    $("terminal").style.display = "";
-    $("anatomyCanvas").style.display = "block";
-    $("fileRefNum").style.display = "none";
+  return best;
+}
+function buildWalls(){
+  const verts=[], faces=[]; const C=CELL, H=WALLH;
+  const q=(a,b,c,d,col)=>{ const b0=verts.length; verts.push(a,b,c,d);
+    faces.push({i:[b0,b0+1,b0+2],col}); faces.push({i:[b0,b0+3,b0+2],col}); };
+  for(let j=0;j<MH;j++) for(let i=0;i<MW;i++){
+    if(maze[j][i]!==0) continue;
+    const cx=i*C, cz=j*C;
+    if(j-1<0||maze[j-1][i]===1) q([cx-C/2,0,cz-C/2],[cx+C/2,0,cz-C/2],[cx+C/2,H,cz-C/2],[cx-C/2,H,cz-C/2],WALLCOL);
+    if(j+1>=MH||maze[j+1][i]===1) q([cx+C/2,0,cz+C/2],[cx-C/2,0,cz+C/2],[cx-C/2,H,cz+C/2],[cx+C/2,H,cz+C/2],WALLCOL);
+    if(i-1<0||maze[j][i-1]===1) q([cx-C/2,0,cz+C/2],[cx-C/2,0,cz-C/2],[cx-C/2,H,cz-C/2],[cx-C/2,H,cz+C/2],WALLCOL);
+    if(i+1>=MW||maze[j][i+1]===1) q([cx+C/2,0,cz-C/2],[cx+C/2,0,cz+C/2],[cx+C/2,H,cz+C/2],[cx+C/2,H,cz-C/2],WALLCOL);
+    q([cx-C/2,0,cz-C/2],[cx+C/2,0,cz-C/2],[cx+C/2,0,cz+C/2],[cx-C/2,0,cz+C/2],FLOORCOL);
+    q([cx-C/2,H,cz-C/2],[cx-C/2,H,cz+C/2],[cx+C/2,H,cz+C/2],[cx+C/2,H,cz-C/2],CEILCOL);
   }
-  if(p>=3){
-    $("corruptCell").style.display = "";
-    Audio.startHeart();
-    Audio.startWhispers();
-    body.classList.add("heartbeat");
-    // auditor hijacks periodically
-    startAuditorCycle();
-  }
-  if(p>=4){
-    // dead silence except heartbeat + whispers
-    Audio.stopHum();
-    Audio.stopDrone();
-    Audio.stopTick();
-    buildGraveyard();
-    $("graveyard").style.display = "";
-    $("inputRow").style.display = "none";
-    $("actionRow").style.display = "none";
-    $("catalogRow").style.display = "none";
-    stage.classList.add("melt");
-  }
-  // side panes drift in phase 2+
-  if(p>=1){
-    document.querySelectorAll("#workPane, #sidePane, #hud").forEach(el=>el.classList.add("float-drift"));
-  }
+  walls={verts,faces};
 }
 
 /* ============================================================
-   FILE / WORK SYSTEM
+   GAME STATE
    ============================================================ */
-function genRef(){
-  let s="";
-  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  for(let i=0;i<16;i++){ s += chars[Math.floor(Math.random()*chars.length)]; if(i===3||i===7||i===11) s+="-"; }
-  return s;
+const FILES_NEEDED=8;
+const G = {
+  state:"start",        // start | playing | paused | caught | lost | won
+  files:0,
+  stamina:100, battery:100, flashOn:false,
+  hidden:false, hideLocker:null,
+  terror:0,
+  caughtStart:0,
+  monster:null,
+  filesList:[], exitCell:null, lockers:[],
+  stepAcc:0, heartAcc:0, whisperAcc:0, scareAcc:0, nextSub:8,
+  realLast:0,
+  scareFace:0, skullUntil:0
+};
+const SUBMSGS=["RUN","IT SEES YOU","DON'T LOOK BACK","HIDE","BEHIND YOU","KEEP MOVING","IT'S FASTER NOW","BREATHE","NO EXIT","TURN AROUND","DON'T BLINK","WE SEE YOU"];
+
+function setupRun(){
+  maze=genMaze(MW,MH);
+  buildWalls();
+  // files at dead-ends, spread out
+  const de=deadEnds(); de.sort(()=>Math.random()-0.5);
+  G.filesList=[]; const used=new Set();
+  for(const c of de){
+    if(G.filesList.length>=FILES_NEEDED) break;
+    let far=true;
+    for(const u of G.filesList){ if(Math.abs(u[0]-c[0])+Math.abs(u[1]-c[1])<4){ far=false; break; } }
+    if(far){ G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]); }
+  }
+  const oc=openCells();
+  while(G.filesList.length<FILES_NEEDED){
+    const c=oc[Math.floor(Math.random()*oc.length)];
+    if(!used.has(c[0]+","+c[1])){ G.filesList.push([c[0],c[1],false]); used.add(c[0]+","+c[1]); }
+  }
+  G.exitCell=randomOpenFar([1,1], Math.min(MW,MH)-3);
+  G.lockers=[];
+  for(let k=0;k<8;k++){
+    const c=oc[Math.floor(Math.random()*oc.length)];
+    const w=[c[0]*CELL, c[1]*CELL];
+    if(c[0]===1&&c[1]===1) continue;
+    if(G.lockers.some(l=>l[0]===w[0]&&l[1]===w[1])) continue;
+    G.lockers.push(w);
+  }
+  const mc=randomOpenFar([1,1], Math.min(MW,MH)-4);
+  G.monster={x:mc[0]*CELL, z:mc[1]*CELL, mode:"patrol", lastKnown:null, wp:null, loseTimer:0, facing:0, stepAcc:0};
+  Cam.x=1*CELL; Cam.y=1.4; Cam.z=1*CELL; Cam.yaw=0; Cam.pitch=0; updateCamBasis();
+  G.files=0; G.stamina=100; G.battery=100; G.flashOn=false; G.hidden=false; G.terror=0; G.caughtStart=0;
+  G.scareFace=0; G.skullUntil=0; G.stepAcc=0; G.heartAcc=0; G.whisperAcc=0; G.scareAcc=0; G.nextSub=8;
+  $("fileCount").textContent="0 / "+FILES_NEEDED;
+  $("flashIcon").textContent="LIGHT OFF"; $("flashIcon").classList.remove("on");
+  $("hint").textContent="FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.";
+  fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
 }
 
-function spawnFile(){
-  const p = currentPhase();
-  if(p>=4){
-    // phase 5: nothing to "file", work is deletion
-    $("fileCard").style.opacity = 0.4;
+/* ============================================================
+   INPUT — pointer lock, keyboard, touch
+   ============================================================ */
+const keys={};
+let locked=false, touchSprint=false;
+// joystick
+let joyActive=false, joyId=null, joyCx=0, joyCy=0, jx=0, jy=0;
+// look drag (right half)
+let lookActive=false, lookId=null, lx=0, ly=0;
+
+window.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  keys[k]=true;
+  if(k==="f") toggleFlash();
+  if(k==="e") tryHide();
+  if(k==="shift") keys.sprint=true;
+  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)) e.preventDefault();
+});
+window.addEventListener("keyup",e=>{
+  const k=e.key.toLowerCase(); keys[k]=false;
+  if(k==="shift") keys.sprint=false;
+});
+function onMouseMove(e){
+  if(!locked || G.state!=="playing") return;
+  const sens=0.0022;
+  Cam.yaw += e.movementX*sens;
+  Cam.pitch = clamp3(Cam.pitch - e.movementY*sens, -1.3, 1.3);
+}
+document.addEventListener("mousemove",onMouseMove);
+document.addEventListener("pointerlockchange",()=>{
+  locked = document.pointerLockElement===world3d;
+  if(!locked && G.state==="playing"){
+    G.state="paused";
+    $("pauseScreen").style.display="flex";
+  }
+});
+function requestLock(){ try{ world3d.requestPointerLock(); }catch(e){} }
+function exitLock(){ try{ document.exitPointerLock(); }catch(e){} }
+
+function toggleFlash(){
+  if(G.state!=="playing") return;
+  if(G.battery<=0){ G.flashOn=false; return; }
+  G.flashOn=!G.flashOn;
+  $("flashIcon").textContent = G.flashOn?"LIGHT ON":"LIGHT OFF";
+  $("flashIcon").classList.toggle("on",G.flashOn);
+  Audio.staticBurst(0.03,0.05);
+}
+function tryHide(){
+  if(G.state!=="playing") return;
+  if(G.hidden){
+    G.hidden=false; G.hideLocker=null;
+    $("hint").textContent="FIND 8 SOUL-FILES. REACH THE EXIT. DO NOT LET IT CATCH YOU.";
     return;
   }
-  $("fileCard").style.opacity = 1;
-  G.currentRef = genRef();
-  $("fileId").textContent = "FILE_REF #"+Math.floor(100000+Math.random()*900000);
-  $("fileDept").textContent = "DEPT: "+DEPTS[Math.floor(Math.random()*DEPTS.length)];
-  if(p>=2){
-    // anatomy canvas
-    $("fileRefNum").style.display = "none";
-    $("anatomyCanvas").style.display = "block";
-    drawAnatomy(Math.floor(Math.random()*9999));
-    $("fileMeta").textContent = "ANOMALY_INDEX "+(40+Math.floor(Math.random()*60))+" | CLASS: organic-residual";
-  } else {
-    $("fileRefNum").style.display = "";
-    $("fileRefNum").textContent = G.currentRef;
-    $("anatomyCanvas").style.display = "none";
-    $("fileMeta").textContent = "TYPE: latent-panic-record | PRIORITY: routine";
-  }
-  $("refInput").value="";
-  // phase 3: anatomy canvas + single CATALOG button (ref hidden, no typing)
-  if(p===2){
-    $("inputRow").style.display = "none";
-    $("actionRow").style.display = "none";
-    $("catalogRow").style.display = "block";
-  } else if(p>=3){
-    // phase 4: action row with swapped semantics
-    $("inputRow").style.display = "none";
-    $("catalogRow").style.display = "none";
-    $("actionRow").style.display = "flex";
-    // swap occasionally
-    G.swapState = Math.random()<0.5 ? 1 : 0;
-    if(G.swapState){
-      $("acceptBtn").textContent = "ACCEPT";
-      $("denyBtn").textContent = "DENY";
-      $("auditorSwapHint").textContent = "// SEMANTIC MAP DRIFT DETECTED. READ WITH CARE.";
-    } else {
-      $("acceptBtn").textContent = "ACCEPT";
-      $("denyBtn").textContent = "DENY";
-      $("auditorSwapHint").textContent = "";
+  for(const l of G.lockers){
+    if(Math.hypot(l[0]-Cam.x, l[1]-Cam.z)<1.2){
+      G.hidden=true; G.hideLocker=l;
+      $("hint").textContent="HIDDEN. HOLD YOUR BREATH. PRESS E TO EXIT. IT MUST NOT HAVE SEEN YOU ENTER.";
+      Audio.staticBurst(0.05,0.06);
+      return;
     }
-  } else {
-    $("inputRow").style.display = "flex";
-    $("actionRow").style.display = "none";
-    $("catalogRow").style.display = "none";
-    $("refInput").focus();
-  }
-  // memo injection
-  if(Math.random()<0.15){
-    const m = MEMOS[Math.floor(Math.random()*MEMOS.length)];
-    $("memoList").innerHTML += "<div style='margin-bottom:4px;'>"+m+"</div>";
-    $("memoList").scrollTop = $("memoList").scrollHeight;
   }
 }
 
-function processFileOK(){
-  G.dayProcessed++; G.totalProcessed++;
-  G.stress = Math.max(0, G.stress-1.5);
-  updateHUD();
-  // silhouette moves only on button click
-  if(G.dayIdx>=1){
-    G.silhouette.x = 0.2 + Math.random()*0.6;
-    G.silhouette.y = 0.3 + Math.random()*0.3;
-    G.silhouette.opacity = 0.04 + Math.min(0.12, G.dayIdx*0.02);
-  }
-  checkQuotaMet();
-  spawnFile();
-}
-function processFileBad(){
-  G.stress = Math.min(100, G.stress+6);
-  Audio.staticBurst(0.15, 0.15);
-  updateHUD();
-}
-
-function checkQuotaMet(){
-  const q = SHIFTS[G.dayIdx].quota;
-  $("quotaLabel").textContent = G.dayProcessed+" / "+q;
-}
-
-function onFileBtn(){
-  if(G.state!=="playing"||G.paused) return;
-  registerClick();
-  const v = $("refInput").value.trim().toUpperCase().replace(/\s/g,"");
-  if(v === G.currentRef){
-    processFileOK();
-  } else {
-    processFileBad();
-  }
-}
-function onAccept(){
-  if(G.state!=="playing"||G.paused) return;
-  registerClick();
-  const p = currentPhase();
-  if(p>=3 && G.swapState){
-    processFileBad(); // accept actually denies
-  } else {
-    processFileOK();
-  }
-}
-function onDeny(){
-  if(G.state!=="playing"||G.paused) return;
-  registerClick();
-  const p = currentPhase();
-  if(p>=3 && G.swapState){
-    processFileOK(); // deny actually accepts
-  } else {
-    processFileBad();
-  }
-}
-function onCatalog(){
-  if(G.state!=="playing"||G.paused) return;
-  registerClick();
-  // phase 3 anomaly cataloging; ~85% are valid anomalies, 15% rejected
-  if(Math.random()<0.85){
-    processFileOK();
-  } else {
-    processFileBad();
-  }
-}
-
-/* ============================================================
-   FRANTIC CLICK CORRUPTION
-   ============================================================ */
-let clickTimes=[];
-function registerClick(){
-  const now = performance.now();
-  clickTimes.push(now);
-  clickTimes = clickTimes.filter(t=> now-t < 1200);
-  if(clickTimes.length > 7){
-    triggerCorruption();
-    clickTimes=[];
-  }
-}
-function triggerCorruption(){
-  // -5 processed, white flash, static
-  G.dayProcessed = Math.max(0, G.dayProcessed-5);
-  G.totalProcessed = Math.max(0, G.totalProcessed-5);
-  G.corruption = Math.min(100, G.corruption+12);
-  G.stress = Math.min(100, G.stress+10);
-  Audio.staticBurst(0.45, 0.5);
-  const f = $("whiteFlash");
-  f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
-  updateHUD();
-}
-
-/* ============================================================
-   COOLING GRID + MATH (Phase 3+)
-   ============================================================ */
-function buildCoolingGrid(){
-  G.coolingBuilt = true;
-  const g = $("coolingGrid");
-  g.innerHTML="";
-  for(let i=0;i<24;i++){
-    const d = document.createElement("div");
-    d.dataset.heat = "0";
-    g.appendChild(d);
-  }
-}
-function heatGrid(){
-  const cells = $("coolingGrid").children;
-  for(let c of cells){
-    let h = parseInt(c.dataset.heat);
-    h = Math.min(3, h + (Math.random()<0.4?1:0));
-    c.dataset.heat = h;
-    c.classList.toggle("hot", h>=2);
-    c.classList.toggle("crit", h>=3);
-  }
-  // overall overheat rises
-  const crit = [...cells].filter(c=>c.dataset.heat==="3").length;
-  G.overheat = Math.min(100, G.overheat + crit*1.2);
-}
-function coolGrid(){
-  const cells = $("coolingGrid").children;
-  for(let c of cells){
-    c.dataset.heat = "0";
-    c.classList.remove("hot","crit");
-  }
-}
-
-function startSirenCycle(){
-  G.sirenTimer = 60;
-  $("sirenBar").classList.add("on");
-  Audio.staticBurst(0.6, 0.3);
-  setTimeout(()=>$("sirenBar").classList.remove("on"), 1200);
-  // generate equation
-  openMathTerminal();
-}
-function openMathTerminal(){
-  if(G.mathActive) return;
-  G.mathActive = true;
-  const log = $("termLog");
-  const r = Math.random();
-  let prompt, sol;
-  if(r < 0.5){
-    // long arithmetic
-    const a = 2+Math.floor(Math.random()*12);
-    const b = 2+Math.floor(Math.random()*12);
-    const c = 3+Math.floor(Math.random()*9);
-    const d = 5+Math.floor(Math.random()*20);
-    const e = 2+Math.floor(Math.random()*7);
-    sol = ((a*b)+c-(Math.floor(d/e)))*1 + (a*b) + c - Math.floor(d/e);
-    // build expression text matching sol
-    prompt = "SOLVE: ((" + a + "*" + b + ")+" + c + "-(" + d + "/" + e + ")) = ?";
-    // recompute cleanly
-    sol = (a*b) + c - Math.floor(d/e);
-    prompt = "SOLVE: (" + a + "*" + b + ")+" + c + "-(" + d + "/" + e + ") = ?";
-  } else {
-    // binary translation
-    const n = 1+Math.floor(Math.random()*255);
-    const bin = n.toString(2);
-    prompt = "TRANSLATE BINARY TO DECIMAL: 0b"+bin+" = ?";
-    sol = n;
-  }
-  G.mathSolution = sol;
-  log.innerHTML = "<div>&gt; MELTDOWN_IMMINENT. SOLVE TO VENT.</div>";
-  log.innerHTML += "<div>&gt; "+prompt+"</div>";
-  log.innerHTML += "<div style='color:#ff6a00;'>&gt; WARNING: overheat rising.</div>";
-  $("termInput").value="";
-  $("termInput").focus();
-  log.scrollTop = log.scrollHeight;
-}
-function submitMath(){
-  if(!G.mathActive) return;
-  const v = parseInt($("termInput").value.trim());
-  const log = $("termLog");
-  if(v === G.mathSolution){
-    log.innerHTML += "<div style='color:#0f0;'>&gt; VENT SUCCESSFUL. GRID STABILIZED.</div>";
-    G.mathActive = false;
-    coolGrid();
-    G.overheat = Math.max(0, G.overheat-30);
-    G.stress = Math.max(0, G.stress-3);
-    spawnFile();
-  } else {
-    log.innerHTML += "<div style='color:#ff0000;'>&gt; INCORRECT. PENALTY APPLIED.</div>";
-    G.overheat = Math.min(100, G.overheat+12);
-    G.stress = Math.min(100, G.stress+8);
-    $("termInput").value="";
-    Audio.staticBurst(0.2,0.2);
-  }
-  log.scrollTop = log.scrollHeight;
-  updateHUD();
-}
-
-/* ============================================================
-   AUDITOR (Phase 4)
-   ============================================================ */
-const AUDITOR_LINES = [
-  "I have read your file. You are not the first. You will not be the last.",
-  "You catalog panic for a wage that does not exist. The wage is the panic.",
-  "Every file you accept is a small death you approved.",
-  "I am the auditor. I count what you erase. I count you.",
-  "Your name was given to me by you. You typed it. You always type it.",
-  "The buttons are not lying. You are lying about which one you pressed.",
-  "Sleep is a courtesy. We are not courteous.",
-  "Look at your hands. They are still typing. They will not stop."
-];
-let auditorTimer=0, auditorOn=false;
-function startAuditorCycle(){
-  if(auditorTimer) return;
-  auditorTimer = setInterval(()=>{
-    if(G.state!=="playing"||G.paused) return;
-    if(currentPhase()<3) return;
-    if(Math.random()<0.5) showAuditor();
-  }, 22000);
-}
-function showAuditor(){
-  if(auditorOn) return;
-  auditorOn = true;
-  G.auditorActive = true;
-  const line = AUDITOR_LINES[Math.floor(Math.random()*AUDITOR_LINES.length)];
-  const el = $("auditorText");
-  el.textContent = "";
-  $("auditor").style.display = "flex";
-  let i=0;
-  const iv = setInterval(()=>{
-    if(i>=line.length){ clearInterval(iv); setTimeout(hideAuditor, 4200); return; }
-    el.textContent += line[i++];
-    if(i%3===0) Audio.staticBurst(0.02, 0.05);
-  }, 45);
-}
-function hideAuditor(){
-  auditorOn=false; G.auditorActive=false;
-  $("auditor").style.display = "none";
-  // randomize swap on dismiss
-  if(currentPhase()>=3){ G.swapState = Math.random()<0.55?1:0; }
-}
-
-/* ============================================================
-   PHASE 5 GRAVEYARD (self-erasure)
-   ============================================================ */
-function buildGraveyard(){
-  if(G.graveBuilt) return;
-  G.graveBuilt = true;
-  const list = $("graveList");
-  list.innerHTML="";
-  const files = MEMORY_FILE_NAMES(G.operatorName || "OPERATOR");
-  files.forEach(f=>{
-    const row = document.createElement("div");
-    row.className="gfile";
-    row.innerHTML = "<span>"+f+"</span><button>DELETE</button>";
-    row.querySelector("button").onclick = ()=>{
-      if(G.state!=="playing"||G.paused) return;
-      registerClick();
-      row.classList.add("dead");
-      row.querySelector("button").disabled = true;
-      G.dayProcessed++; G.totalProcessed++;
-      G.stress = Math.min(100, G.stress+3);
-      G.corruption = Math.min(100, G.corruption+2);
-      Audio.staticBurst(0.1, 0.08);
-      updateHUD();
-      // erase the text gradually
-      setTimeout(()=>{ row.querySelector("span").textContent = f.replace(/./g, "█"); }, 200);
-      checkGraveyardDone();
-    };
-    list.appendChild(row);
-  });
-  G.graveTotal = files.length;
-  G.graveDeleted = 0;
-}
-function checkGraveyardDone(){
-  const dead = $("graveList").querySelectorAll(".dead").length;
-  G.graveDeleted = dead;
-  if(dead >= G.graveTotal){
-    // extraction purge complete; stress ebbs
-    G.stress = Math.max(0, G.stress-15);
-  }
-}
-
-/* ============================================================
-   BLINK METER (Day 3+)
-   ============================================================ */
-let blinkKeyHeld=false;
-function updateBlink(dt){
-  if(!G.blinkActive) return;
-  if(!blinkKeyHeld){
-    G.blink = Math.max(0, G.blink - dt*5); // drains over ~20s
-  } else {
-    G.blink = Math.min(100, G.blink + dt*60); // refill on hold
-  }
-  if(G.blink<=0){
-    // blurry, chromatic aberration, whispers
-    stage.classList.add("chroma","blurEyes");
-    if(Math.random()<0.03) Audio.whisperBurst();
-    G.stress = Math.min(100, G.stress + dt*3);
-  } else if(G.blink>40){
-    stage.classList.remove("chroma","blurEyes");
-  }
-}
-
-/* ============================================================
-   SUBLIMINAL INJECTION
-   ============================================================ */
-let nextSubliminal = 120 + Math.random()*60;
-function maybeSubliminal(dt){
-  if(G.state!=="playing"||G.paused) return;
-  nextSubliminal -= dt;
-  if(nextSubliminal<=0){
-    nextSubliminal = 120 + Math.random()*60;
-    const msg = SUBLIMINAL_MSGS[Math.floor(Math.random()*SUBLIMINAL_MSGS.length)];
-    const el = $("subliminal");
-    el.textContent = msg;
-    el.style.display = "flex";
-    setTimeout(()=>{ el.style.display="none"; }, 50);
-  }
-}
-
-/* ============================================================
-   TAB LOCK / SENSORY DEPRIVATION
-   ============================================================ */
-function lockTab(){
+// ---- touch ----
+if('ontouchstart' in window){ document.body.classList.add("touch"); }
+const joy=$("joy"), knob=$("joyKnob");
+joy.addEventListener("touchstart",e=>{ e.preventDefault();
+  const t=e.changedTouches[0]; joyId=t.identifier;
+  const r=joy.getBoundingClientRect(); joyCx=r.left+r.width/2; joyCy=r.top+r.height/2;
+  joyActive=true;
+},{passive:false});
+joy.addEventListener("touchmove",e=>{ e.preventDefault();
+  if(!joyActive) return;
+  for(const t of e.changedTouches){ if(t.identifier===joyId){
+    let dx=t.clientX-joyCx, dy=t.clientY-joyCy; const L=Math.hypot(dx,dy), m=50;
+    if(L>m){ dx=dx/L*m; dy=dy/L*m; }
+    jx=dx/m; jy=dy/m; knob.style.left=(45+dx)+"px"; knob.style.top=(45+dy)+"px"; break;
+  } }
+},{passive:false});
+joy.addEventListener("touchend",e=>{ e.preventDefault();
+  joyActive=false; jx=0; jy=0; knob.style.left="45px"; knob.style.top="45px";
+},{passive:false});
+document.addEventListener("touchstart",e=>{
   if(G.state!=="playing") return;
-  if(G.tabLocked) return;
-  G.tabLocked = true;
-  G.paused = true;
-  $("tabLock").style.display = "flex";
-  Audio.startScreech();
-  // pause heartbeat timing but keep screech
-}
-function unlockTab(){
-  if(!G.tabLocked) return;
-  G.tabLocked = false;
-  G.paused = false;
-  $("tabLock").style.display = "none";
-  Audio.stopScreech();
-  // penalty
-  G.stress = Math.min(100, G.stress+12);
-}
-document.addEventListener("visibilitychange", ()=>{
-  if(document.hidden) lockTab(); else if(G.tabLocked) unlockTab();
-});
-window.addEventListener("blur", lockTab);
-window.addEventListener("focus", ()=>{ if(G.tabLocked) unlockTab(); });
-document.addEventListener("mouseleave", (e)=>{
-  if(e.relatedTarget===null) lockTab();
-});
-document.addEventListener("mouseenter", ()=>{ if(G.tabLocked) unlockTab(); });
-
-/* ============================================================
-   TIME DILATION / JITTER
-   ============================================================ */
-function tickTime(dt){
-  if(G.paused) return;
-  // stress-based jitter
-  if(G.stress>70){
-    if(Math.random()<0.03){ // stall
-      return;
-    }
-    if(Math.random()<0.015){ // tick backwards
-      G.elapsed = Math.max(PHASE_BOUNDS[G.dayIdx], G.elapsed - (2+Math.random()*3));
-      return;
+  for(const t of e.changedTouches){
+    if(t.clientX>window.innerWidth*0.5 && !lookActive){
+      lookActive=true; lookId=t.identifier; lx=t.clientX; ly=t.clientY;
     }
   }
-  G.elapsed += dt;
+},{passive:false});
+document.addEventListener("touchmove",e=>{
+  if(!lookActive) return;
+  for(const t of e.changedTouches){ if(t.identifier===lookId){
+    const dx=t.clientX-lx, dy=t.clientY-ly;
+    Cam.yaw += dx*0.004; Cam.pitch = clamp3(Cam.pitch - dy*0.004, -1.3, 1.3);
+    lx=t.clientX; ly=t.clientY; break;
+  } }
+},{passive:false});
+document.addEventListener("touchend",e=>{
+  for(const t of e.changedTouches){ if(t.identifier===lookId){ lookActive=false; lookId=null; } }
+},{passive:false});
+$("tSprint").addEventListener("touchstart",e=>{e.preventDefault();touchSprint=true;},{passive:false});
+$("tSprint").addEventListener("touchend",e=>{e.preventDefault();touchSprint=false;},{passive:false});
+$("tLight").addEventListener("click",e=>{e.preventDefault();toggleFlash();});
+$("tHide").addEventListener("click",e=>{e.preventDefault();tryHide();});
+
+/* ============================================================
+   PLAYER MOVEMENT + COLLISION
+   ============================================================ */
+const PR=0.34;
+function blocked(x,z){
+  return isWall(x+PR,z+PR)||isWall(x+PR,z-PR)||isWall(x-PR,z+PR)||isWall(x-PR,z-PR);
+}
+function tryMove(nx,nz){
+  if(!blocked(nx, Cam.z)) Cam.x=nx;
+  if(!blocked(Cam.x, nz)) Cam.z=nz;
+}
+function updatePlayer(dt){
+  if(G.hidden) return;
+  const sy=Math.sin(Cam.yaw), cy=Math.cos(Cam.yaw);
+  const fx=sy, fz=-cy, rx=cy, rz=sy;
+  let mx=0, mz=0;
+  if(keys.w||keys.arrowup){ mx+=fx; mz+=fz; }
+  if(keys.s||keys.arrowdown){ mx-=fx; mz-=fz; }
+  if(keys.d||keys.arrowright){ mx+=rx; mz+=rz; }
+  if(keys.a||keys.arrowleft){ mx-=rx; mz-=rz; }
+  // touch joystick
+  if(jy<-0.2){ mx+=fx; mz+=fz; } if(jy>0.2){ mx-=fx; mz-=fz; }
+  if(jx>0.2){ mx+=rx; mz+=rz; } if(jx<-0.2){ mx-=rx; mz-=rz; }
+  const moving = (mx!==0||mz!==0);
+  const wantSprint = (keys.shift||keys.sprint||touchSprint) && G.stamina>1;
+  const sp = wantSprint?5.4:3.0;
+  if(wantSprint) G.stamina=Math.max(0, G.stamina-22*dt);
+  else G.stamina=Math.min(100, G.stamina+(G.stamina<5?6:11)*dt);
+  if(moving){
+    const L=Math.hypot(mx,mz);
+    if(L>0){ mx=mx/L*sp*dt; mz=mz/L*sp*dt; }
+    tryMove(Cam.x+mx, Cam.z+mz);
+    G.stepAcc += sp*dt;
+    if(G.stepAcc > (wantSprint?0.62:1.05)){ G.stepAcc=0; Audio.footstep(); }
+  }
+  if(G.flashOn){
+    G.battery=Math.max(0, G.battery-4*dt);
+    if(G.battery<=0){ G.flashOn=false; $("flashIcon").textContent="LIGHT OFF"; $("flashIcon").classList.remove("on"); }
+  }
 }
 
 /* ============================================================
-   HUD UPDATE
+   THE AUDITOR — chase AI
+   ============================================================ */
+const SIGHT=14;
+function lineOfSight(ax,az,bx,bz){
+  const dx=bx-ax, dz=bz-az; const dist=Math.hypot(dx,dz);
+  const steps=Math.ceil(dist/0.3);
+  for(let s=1;s<steps;s++){ const t=s/steps; if(isWall(ax+dx*t, az+dz*t)) return false; }
+  return true;
+}
+function monsterStep(m,tx,tz,sp,dt){
+  const dx=tx-m.x, dz=tz-m.z; const ang=Math.atan2(dx,dz);
+  const dirs=[ang, ang+Math.PI/2, ang-Math.PI/2, ang+Math.PI];
+  for(const a of dirs){
+    const sx=Math.sin(a), sz=Math.cos(a);
+    if(!isWall(m.x+sx*0.5, m.z+sz*0.5)){
+      m.x+=sx*sp*dt; m.z+=sz*sp*dt; m.facing=a; return;
+    }
+  }
+}
+function updateMonster(dt){
+  const m=G.monster; const px=Cam.x, pz=Cam.z;
+  const dist=Math.hypot(px-m.x, pz-m.z);
+  const canSee = !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,px,pz);
+  const lightBetray = G.flashOn && !G.hidden && dist<SIGHT*1.6 && lineOfSight(m.x,m.z,px,pz);
+  if(canSee || lightBetray){ m.mode="chase"; m.lastKnown=[px,pz]; m.loseTimer=5; }
+  else if(m.mode==="chase"){
+    m.loseTimer-=dt;
+    if(m.loseTimer<=0){ m.mode="patrol"; m.lastKnown=null; }
+  }
+  let tx, tz;
+  if(m.mode==="chase" && m.lastKnown){
+    tx=m.lastKnown[0]; tz=m.lastKnown[1];
+    if(Math.hypot(tx-m.x, tz-m.z)<0.6){ m.lastKnown=null; m.mode="patrol"; }
+  } else {
+    if(!m.wp || Math.hypot(m.wp[0]-m.x, m.wp[1]-m.z)<0.8){
+      const c=randomOpenFar([Math.round(m.x/CELL), Math.round(m.z/CELL)], 3);
+      m.wp = c ? [c[0]*CELL, c[1]*CELL] : [m.x, m.z];
+    }
+    tx=m.wp[0]; tz=m.wp[1];
+  }
+  const sp = (1.9 + 0.26*G.files) * (m.mode==="chase"?1.0:0.55);
+  monsterStep(m, tx, tz, sp, dt);
+  m.stepAcc += sp*dt;
+  if(m.stepAcc > (m.mode==="chase"?0.5:0.95)){ m.stepAcc=0; if(dist<11) Audio.footstep(); }
+  if(!G.hidden && dist<0.7){ caught(); return; }
+  if(G.hidden && dist<0.9 && m.mode==="chase" && m.loseTimer>4.6){ caught(); return; }
+}
+function caught(){
+  if(G.state!=="playing") return;
+  G.state="caught"; G.caughtStart=performance.now();
+  Audio.screamBurst(); Audio.startMeltdown(); Audio.staticBurst(0.2,0.5);
+  exitLock();
+}
+
+/* ============================================================
+   COLLECTION + WIN
+   ============================================================ */
+function updateCollect(){
+  for(const f of G.filesList){
+    if(f[2]) continue;
+    const fx=f[0]*CELL, fz=f[1]*CELL;
+    if(Math.hypot(fx-Cam.x, fz-Cam.z)<1.0){
+      f[2]=true; G.files++;
+      $("fileCount").textContent=G.files+" / "+FILES_NEEDED;
+      Audio.staticBurst(0.12,0.18);
+      if(G.files>=FILES_NEEDED){
+        $("hint").textContent="ALL FILES RECLAIMED. THE EXIT IS OPEN. RUN.";
+      } else {
+        $("hint").textContent="FILE "+G.files+"/"+FILES_NEEDED+" ABSORBED. IT IS FASTER NOW.";
+      }
+    }
+  }
+  if(G.files>=FILES_NEEDED && G.exitCell){
+    const ex=G.exitCell[0]*CELL, ez=G.exitCell[1]*CELL;
+    if(Math.hypot(ex-Cam.x, ez-Cam.z)<1.5){ win(); }
+  }
+}
+function win(){
+  if(G.state!=="playing") return;
+  G.state="won";
+  Audio.stopAll();
+  exitLock();
+  $("endScreen").style.display="flex";
+}
+
+/* ============================================================
+   TENSION + SCARES
+   ============================================================ */
+function updateTension(dt){
+  const m=G.monster;
+  const dist=Math.hypot(Cam.x-m.x, Cam.z-m.z);
+  const seen = !G.hidden && dist<SIGHT && lineOfSight(m.x,m.z,Cam.x,Cam.z);
+  const prox = clamp3((10-dist)/10, 0, 1);
+  G.terror = seen ? Math.max(prox, 0.55) : prox*0.5;
+  // heartbeat by proximity
+  const bpm = 60 + G.terror*120 + G.files*4;
+  Audio.setHeartRate(bpm);
+  G.heartAcc += dt;
+  if(G.heartAcc > 60/bpm){ G.heartAcc=0; Audio.heartBeat(); }
+  // directed whispers toward the monster's screen position
+  G.whisperAcc += dt;
+  if(G.whisperAcc > 4 - G.terror*3){
+    G.whisperAcc=0;
+    const sx=screenX([m.x,1.4,m.z]);
+    if(sx!==null) Audio.whisperDirected(sx); else Audio.whisperBurst();
+  }
+  // subliminals
+  G.nextSub -= dt;
+  if(G.nextSub<=0){
+    G.nextSub = (12 - G.terror*8) + Math.random()*8;
+    flashSub();
+  }
+  // random face-rush scare
+  G.scareAcc += dt;
+  if(G.scareAcc > 28+Math.random()*30 && G.terror>0.2){ G.scareAcc=0; scareFaceRush(); }
+}
+function flashSub(){
+  if(Math.random()<0.22){
+    G.skullUntil = performance.now()+70;
+    if(Math.random()<0.5) Audio.staticBurst(0.04,0.1);
+  } else {
+    const el=$("subliminal");
+    el.textContent = SUBMSGS[Math.floor(Math.random()*SUBMSGS.length)];
+    el.style.display="flex";
+    setTimeout(()=>{ el.style.display="none"; }, 55);
+  }
+}
+function scareFaceRush(){
+  G.scareFace = performance.now();
+  Audio.staticBurst(0.14,0.5);
+}
+// screaming skull face on the FX overlay
+function drawRushFace(ctx, scale, t){
+  const w=fxCanvas.width, h=fxCanvas.height;
+  const cx=w/2, cy=h/2, R=Math.min(w,h)*0.42*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  ctx.fillStyle="rgba(12,0,0,0.95)"; ctx.strokeStyle="#ff0000"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.ellipse(0,0,R*0.72,R,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle="#ff0000"; ctx.shadowColor="#ff0000"; ctx.shadowBlur=45;
+  ctx.beginPath();
+  ctx.ellipse(-R*0.28,-R*0.18,R*0.14,R*0.22,0.3,0,Math.PI*2);
+  ctx.ellipse(R*0.28,-R*0.18,R*0.14,R*0.22,-0.3,0,Math.PI*2);
+  ctx.fill();
+  ctx.shadowBlur=25; ctx.fillStyle="#220000";
+  ctx.beginPath(); ctx.ellipse(0,R*0.34,R*0.16,R*0.26*Math.max(0.4,t),0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================
+   HUD
    ============================================================ */
 function updateHUD(){
-  $("dayLabel").textContent = (G.dayIdx+1)+" / 5";
-  $("clock").textContent = fmt(dayTimeLeft());
-  const q = SHIFTS[G.dayIdx].quota;
-  $("quotaLabel").textContent = Math.min(G.dayProcessed,q)+" / "+q;
-  $("totalLabel").textContent = G.totalProcessed;
-  $("stressFill").style.width = G.stress+"%";
-  $("overFill").style.width = G.overheat+"%";
-  $("blinkFill").style.width = G.blink+"%";
-  $("corruptFill").style.width = G.corruption+"%";
-  // heartbeat rate scales with corruption
-  if(G.corruption>0){
-    const bpm = 60 + G.corruption*0.9; // up to ~150
-    Audio.setHeartRate(bpm);
-    // schedule heartbeats faster handled in loop using bpm
+  $("stamFill").style.width = G.stamina+"%";
+  $("battFill").style.width = G.battery+"%";
+  const t=G.terror;
+  const lbl = t>0.75?"IT IS RIGHT BEHIND YOU":(t>0.45?"IT SEES YOU":(t>0.2?"CLOSE":"CALM"));
+  $("terrorLabel").textContent = lbl;
+  $("terrorLabel").style.color = t>0.75?"#ff0000":(t>0.45?"#ff5050":(t>0.2?"#cc6644":"#666"));
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(ts){
+  const cw=world3d.width, ch=world3d.height;
+  w3ctx.clearRect(0,0,cw,ch);
+  updateCamBasis();
+  const jit = G.terror*0.06 + (G.terror>0.7?0.04:0);
+  // flashlight extends vision; off = near-dark
+  let drawDist, fogFar, fog;
+  if(G.flashOn){ drawDist=17; fogFar=15; fog=[14,12,18]; }
+  else { drawDist=6; fogFar=5; fog=[3,2,5]; }
+  const fogNear=0.5;
+  // walls + floor + ceiling
+  renderMesh(walls, fog, fogNear, fogFar, jit, drawDist);
+  // soul-files (floating, glowing)
+  for(const f of G.filesList){
+    if(f[2]) continue;
+    const fx=f[0]*CELL, fz=f[1]*CELL;
+    const fy = 0.9 + Math.sin(ts*0.003 + f[0])*0.12;
+    M3D.fileMesh.rot=[0, ts*0.001, 0];
+    M3D.fileMesh.pos=[fx, fy, fz];
+    renderMesh(M3D.fileMesh, fog, fogNear, fogFar, 0, drawDist);
+    drawGlow([fx, fy, fz], 0.2, FILECOL, 0.9);
+  }
+  // exit door
+  if(G.exitCell){
+    const ex=G.exitCell[0]*CELL, ez=G.exitCell[1]*CELL;
+    const open = G.files>=FILES_NEEDED;
+    drawGlow([ex,1.4,ez], 0.6, open?EXITCOL:[120,20,20], open?0.9:0.4);
+    if(open){
+      // bright doorway quad
+      M3D.lockerMesh.rot=[0,0,0]; M3D.lockerMesh.pos=[ex,1.4,ez];
+      // reuse a box tinted green by temporarily swapping face colors is messy; draw a glow only
+      drawGlow([ex,1.4,ez], 1.0, EXITCOL, 0.5);
+    }
+  }
+  // lockers (hiding spots)
+  for(const l of G.lockers){
+    M3D.lockerMesh.rot=[0,0,0]; M3D.lockerMesh.pos=[l[0],0.9,l[1]];
+    renderMesh(M3D.lockerMesh, fog, fogNear, fogFar, 0, drawDist);
+  }
+  // the Auditor
+  const m=G.monster;
+  M3D.figure.rot=[0, m.facing+Math.PI, 0];
+  M3D.figure.pos=[m.x, 0.2, m.z];
+  renderMesh(M3D.figure, fog, fogNear, fogFar, jit*0.5, drawDist);
+  drawGlow([m.x, 2.0, m.z], 0.09, [255,30,30], 0.7+G.terror*0.3);
+  drawGlow([m.x, 1.4, m.z], 0.14, [120,0,0], 0.25+G.terror*0.4);
+
+  // ===== FX overlay =====
+  fxCtx.clearRect(0,0,cw,ch);
+  // flashlight warm pool at screen center
+  if(G.flashOn){
+    const g=fxCtx.createRadialGradient(cw/2,ch/2,0, cw/2,ch/2, Math.min(cw,ch)*0.4);
+    g.addColorStop(0,"rgba(255,240,180,0.07)"); g.addColorStop(1,"rgba(0,0,0,0)");
+    fxCtx.fillStyle=g; fxCtx.fillRect(0,0,cw,ch);
+  }
+  const now=performance.now();
+  if(G.state==="caught"){
+    const t=Math.min(1,(now-G.caughtStart)/1400);
+    drawRushFace(fxCtx, 0.5+t*1.5, t);
+  } else if(G.scareFace && now-G.scareFace<160){
+    const t=(now-G.scareFace)/160;
+    drawRushFace(fxCtx, 0.3+t*1.2, t);
+  } else if(G.skullUntil && now<G.skullUntil){
+    drawRushFace(fxCtx, 1.0, 1);
+  } else if(G.terror>0.75){
+    fxCtx.fillStyle="rgba(110,0,0,"+((G.terror-0.75)*1.2)+")";
+    fxCtx.fillRect(0,0,cw,ch);
   }
 }
 
 /* ============================================================
    MAIN LOOP
    ============================================================ */
-let lastHeartBeat = 0;
 function loop(ts){
   requestAnimationFrame(loop);
-  if(G.state!=="playing"){ return; }
-  if(!G.realLast) G.realLast = ts;
-  let dt = (ts - G.realLast)/1000;
-  G.realLast = ts;
-  if(dt>0.25) dt=0.25; // clamp
-
-  if(G.paused){
-    // still draw silhouette
+  if(G.state==="start"||G.state==="won"||G.state==="lost") return;
+  if(!G.realLast) G.realLast=ts;
+  let dt=(ts-G.realLast)/1000; G.realLast=ts;
+  if(dt>0.1) dt=0.1;
+  if(G.state==="paused"){ return; }
+  updateCamBasis();
+  if(G.state==="caught"){
+    if(performance.now()-G.caughtStart>1400){
+      $("loseScreen").style.display="flex";
+      G.state="lost"; Audio.stopAll();
+    }
+    render(ts);
     return;
   }
-
-  tickTime(dt);
-  // phase transitions
-  const p = currentPhase();
-  if(p !== G._lastPhase){
-    G._lastPhase = p;
-    if(p>0) onPhaseEnter(p);
-    applyPhaseClass(p);
-    // day index follows phase
-    if(p>G.dayIdx){
-      // quota penalty for previous day if not met
-      const prevQuota = SHIFTS[G.dayIdx].quota;
-      if(G.dayProcessed < prevQuota){
-        const deficit = prevQuota - G.dayProcessed;
-        G.stress = Math.min(100, G.stress + Math.min(40, deficit*0.6));
-        $("memoList").innerHTML += "<div style='color:#c21515;margin-bottom:4px;'>QUOTA DEFICIT "+deficit+". LATENT YIELD PENALTY APPLIED.</div>";
-        $("memoList").scrollTop = $("memoList").scrollHeight;
-      }
-      // day rollover
-      G.dayIdx = p;
-      G.dayProcessed = 0;
-      checkQuotaMet();
-    }
-    spawnFile();
-  }
-
-  // continuous meters
-  G.stress = Math.min(100, G.stress + dt*0.18); // ambient stress rise
-  if(currentPhase()>=2){
-    G.overheat = Math.min(100, G.overheat + dt*0.4);
-    // grid heat
-    G._gridAcc = (G._gridAcc||0)+dt;
-    if(G._gridAcc>3){ G._gridAcc=0; heatGrid(); }
-    // siren countdown
-    G.sirenTimer -= dt;
-    $("sirenCountdown").textContent = Math.max(0,Math.ceil(G.sirenTimer));
-    if(G.sirenTimer<=0){ startSirenCycle(); }
-    // metallic tick
-    G._tickAcc = (G._tickAcc||0)+dt;
-    if(G._tickAcc>1){ G._tickAcc=0; Audio.tickPulse(); }
-  }
-  if(currentPhase()>=3){
-    // whispers
-    G._whisperAcc = (G._whisperAcc||0)+dt;
-    if(G._whisperAcc > 3+Math.random()*4){ G._whisperAcc=0; Audio.whisperBurst(); }
-    // heartbeat
-    const bpm = 60 + G.corruption*0.9;
-    const interval = 60/bpm;
-    G._heartAcc = (G._heartAcc||0)+dt;
-    if(G._heartAcc > interval){ G._heartAcc=0; Audio.heartBeat(); }
-  }
-
-  updateBlink(dt);
-  maybeSubliminal(dt);
-
-  // redraw canvas things
-  drawSilhouette();
-  if(currentPhase()>=2 && Math.random()<0.3) drawAnatomy(Math.floor(Math.random()*9999));
-
+  // playing
+  updatePlayer(dt);
+  updateMonster(dt);
+  updateCollect();
+  updateTension(dt);
   updateHUD();
-
-  // lose checks
-  if(G.stress>=100 || G.overheat>=100){
-    triggerLose();
-  }
-  // win check
-  if(G.elapsed >= TOTAL_DUR){
-    triggerWin();
-  }
+  render(ts);
 }
 
 /* ============================================================
-   LOSE
+   START / RESTART / WIRING
    ============================================================ */
-function triggerLose(){
-  if(G.ended) return; G.ended=true;
-  G.state="lost";
-  Audio.stopAll();
-  Audio.startMeltdownStatic();
-  Audio.startScreech();
-  $("loseScreen").style.display="block";
-  body.classList.add("heartbeat");
-  // animate demon
-  let t=0;
-  function anim(){
-    if(G.state!=="lost") return;
-    t+=16;
-    drawDemon(t);
-    requestAnimationFrame(anim);
-  }
-  anim();
-  // freeze forever (no further input changes state)
-}
+function resize(){ FOCAL=window.innerWidth*0.9; [world3d,fxCanvas].forEach(c=>{ c.width=window.innerWidth; c.height=window.innerHeight; }); }
+window.addEventListener("resize", resize);
 
-/* ============================================================
-   WIN
-   ============================================================ */
-function triggerWin(){
-  if(G.ended) return; G.ended=true;
-  G.state="won";
-  Audio.stopAll();
-  // dead void
-  game.classList.add("fadeBlack");
-  $("loseScreen").style.display="none";
-  $("stage").style.opacity=0;
-  // reveal the dead void, then after ~15s of silence fade in the final line
-  $("endScreen").style.display="flex";
-  setTimeout(()=>{
-    $("endScreen").classList.add("show");
-  }, 15000);
-}
-
-/* ============================================================
-   START
-   ============================================================ */
 function startGame(){
-  const name = ($("nameInput").value || "OPERATOR").trim().toUpperCase().slice(0,24) || "OPERATOR";
-  G.operatorName = name;
   Audio.init(); Audio.resume();
-  Audio.startHum();
-  G.state="playing";
-  G._lastPhase = 0;
-  applyPhaseClass(0);
-  onPhaseEnter(0);
+  Audio.startHum(); Audio.startDrone(); Audio.startHeart();
+  initMeshes();
+  setupRun();
+  G.state="playing"; G.realLast=0;
   $("startScreen").style.display="none";
-  spawnFile();
-  checkQuotaMet();
-  updateHUD();
+  $("loseScreen").style.display="none";
+  $("endScreen").style.display="none";
+  $("pauseScreen").style.display="none";
+  requestLock();
   requestAnimationFrame(loop);
 }
-
-/* ============================================================
-   EVENT WIRING
-   ============================================================ */
 $("beginBtn").addEventListener("click", startGame);
-$("nameInput").addEventListener("keydown", e=>{ if(e.key==="Enter") startGame(); });
-$("fileBtn").addEventListener("click", onFileBtn);
-$("acceptBtn").addEventListener("click", onAccept);
-$("denyBtn").addEventListener("click", onDeny);
-$("catalogBtn").addEventListener("click", onCatalog);
-$("refInput").addEventListener("keydown", e=>{ if(e.key==="Enter") onFileBtn(); });
-$("termInput").addEventListener("keydown", e=>{ if(e.key==="Enter") submitMath(); });
-
-window.addEventListener("keydown", e=>{
-  if(e.key==="b"||e.key==="B"){
-    blinkKeyHeld=true;
-    // immediate partial refill feel
-  }
+$("pauseScreen").addEventListener("click", ()=>{
+  if(G.state==="paused"){ G.state="playing"; $("pauseScreen").style.display="none"; requestLock(); }
 });
-window.addEventListener("keyup", e=>{
-  if(e.key==="b"||e.key==="B") blinkKeyHeld=false;
-});
+$("loseScreen").addEventListener("click", ()=>{ $("loseScreen").style.display="none"; startGame(); });
+$("endScreen").addEventListener("click", ()=>{ $("endScreen").style.display="none"; startGame(); });
 
-// prevent context menu disrupting
-document.addEventListener("contextmenu", e=>e.preventDefault());
-
-// init
-resizeCanvases();
-drawSilhouette();
+resize();
+if('ontouchstart' in window) document.body.classList.add("touch");
 </script>
 </body>
 </html>
